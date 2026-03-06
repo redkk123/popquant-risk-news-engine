@@ -23,6 +23,8 @@ from event_engine.live_validation import (
 )
 from event_engine.run_logging import append_run_event
 
+DEFAULT_PROVIDERS = ["marketaux", "thenewsapi", "alphavantage"]
+
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run a larger-sample validation over multiple live Marketaux windows.")
@@ -46,6 +48,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional thematic pack name loaded from the symbol config when --symbols is not provided.",
     )
     parser.add_argument("--language", default="en", help="Language filter.")
+    parser.add_argument(
+        "--providers",
+        nargs="*",
+        default=DEFAULT_PROVIDERS,
+        help="Ordered providers forwarded to the live watchlist runner.",
+    )
     parser.add_argument("--limit", type=int, default=3, help="Articles per page.")
     parser.add_argument("--max-pages", type=int, default=2, help="Maximum pages fetched per window.")
     parser.add_argument(
@@ -187,6 +195,7 @@ def main() -> int:
             "as_of": args.as_of,
             "symbols": symbols,
             "symbol_pack": args.symbol_pack or None,
+            "providers": args.providers,
         },
     )
 
@@ -206,6 +215,8 @@ def main() -> int:
             window["published_before"],
             "--symbols",
             *symbols,
+            "--providers",
+            *args.providers,
             "--language",
             args.language,
             "--limit",

@@ -4,8 +4,8 @@ Use this when preparing the repo for a first public push.
 
 Current note:
 
-- the project directory does not yet have its own `.git` folder
-- if you want to publish from `D:\\Playground\\popquant_1_month`, start with `git init`
+- the project already has its own `.git` folder
+- this checklist is now for keeping the public repo clean, not for bootstrapping git
 
 ## Keep
 
@@ -36,7 +36,6 @@ If you include generated outputs, prefer short markdown reports and small PNGs o
 
 1. Run `python -m pytest tests -q`
 2. Open the Streamlit UI once with `streamlit run ui/app.py`
-3. If the repo has not been initialized yet, run `git init`
 3. Confirm no secret values appear in:
    - `output/**/run_log.jsonl`
    - `output/**/failure_manifest.json`
@@ -44,6 +43,7 @@ If you include generated outputs, prefer short markdown reports and small PNGs o
 4. Confirm README commands still match the current scripts
 5. Confirm the roadmap file points to the right canonical source:
    - `plan/master_execution_plan.md`
+6. Confirm showcase artifacts are lightweight and still representative
 
 ## Suggested Reading Order
 

@@ -244,6 +244,67 @@ def test_taxonomy_classifies_rankings_headline_as_commentary() -> None:
     assert event["event_type"] == "commentary"
 
 
+def test_taxonomy_classifies_market_close_recap_as_macro() -> None:
+    document = {
+        "title": "U.S. stocks lower at close of trade; Dow Jones Industrial Average down 1.61%",
+        "description": "Broad U.S. market weakness dragged major indices lower into the close.",
+        "snippet": "",
+    }
+    event = classify_event_type(document)
+    assert event["event_type"] == "macro"
+    assert event["event_subtype"] == "market_color"
+
+
+def test_taxonomy_classifies_reit_picker_as_commentary() -> None:
+    document = {
+        "title": "2 Monthly Dividend REITs to Buy Now",
+        "description": "A stock-picker style article for income investors.",
+        "snippet": "",
+    }
+    event = classify_event_type(document)
+    assert event["event_type"] == "commentary"
+
+
+def test_taxonomy_classifies_algorithmic_entry_headline_as_commentary() -> None:
+    document = {
+        "title": "(UDN) Movement Within Algorithmic Entry Frameworks",
+        "description": "Trading frameworks and entry timing discussion.",
+        "snippet": "",
+    }
+    event = classify_event_type(document)
+    assert event["event_type"] == "commentary"
+
+
+def test_taxonomy_classifies_full_year_results_headline_as_earnings() -> None:
+    document = {
+        "title": "NN Reports Stronger 2025 Results, Eyes 2026 Growth",
+        "description": "The company reported stronger full-year results and expects renewed growth.",
+        "snippet": "",
+    }
+    event = classify_event_type(document)
+    assert event["event_type"] == "earnings"
+
+
+def test_taxonomy_classifies_priced_attractive_headline_as_commentary() -> None:
+    document = {
+        "title": "Is Privia Health Group (PRVA) Priced Attractive After Recent Share Price Swings",
+        "description": "A valuation-oriented opinion piece.",
+        "snippet": "",
+    }
+    event = classify_event_type(document)
+    assert event["event_type"] == "commentary"
+
+
+def test_taxonomy_classifies_iran_attack_market_story_as_macro() -> None:
+    document = {
+        "title": "Lockheed Martin, RTX Corp Stocks Hit All-Time Highs On Iran Attack: Here's The Congress Members Who Own Shares",
+        "description": "Defense stocks surged after the Iran attack and broader geopolitical escalation.",
+        "snippet": "",
+    }
+    event = classify_event_type(document)
+    assert event["event_type"] == "macro"
+
+
 def test_taxonomy_classifies_meta_trial_headline_as_legal() -> None:
     document = {
         "title": "Judge blocks Meta from introducing plaintiff's additional trauma claims in social media trial",

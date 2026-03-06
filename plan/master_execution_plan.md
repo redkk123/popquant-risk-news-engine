@@ -52,6 +52,7 @@ Everything still open, in execution order:
 - continue provider-specific source overrides from fresh live samples
 - keep weak recap/opinion/press-release sources out of the active watchlist layer
 - tighten live handling of edge-case event families that still show up in real news
+- `Alpha Vantage` now has official macro-topic fallback plus free-tier pacing; the remaining gap is fresh evidence, not missing adapter coverage
 
 4. Capital sandbox expansion
 - validate the new richer paths on fresh sessions:
@@ -156,6 +157,7 @@ Done:
 
 Next:
 - keep refining provider-specific overrides on real live samples
+- keep validating provider quality on fresh windows once quotas reset
 
 ### Phase D - Scenario and Calibration Refinement
 
@@ -185,6 +187,7 @@ Next:
 - larger calibration sample
 - family-level backtest comparisons
 - more archived-live and fresh-live comparisons before promotion into the primary selected lineage
+- latest fresh evidence improved `14/15` portfolios under the guarded candidate, but grouped aggregate promotion is still blocked
 
 ### Phase E - Backtest and Research Expansion
 

@@ -6,7 +6,19 @@ from typing import Any
 
 EVENT_RULES: list[tuple[str, int, list[str]]] = [
     ("m_and_a", 95, [r"\bacquires?\b", r"\bmerger\b", r"\bacquisition\b", r"\bbuyout\b"]),
-    ("earnings", 92, [r"\bearnings\b", r"\bquarter results\b", r"\bq[1-4]\b", r"\beps\b"]),
+    (
+        "earnings",
+        92,
+        [
+            r"\bearnings\b",
+            r"\bquarter results\b",
+            r"\bq[1-4]\b",
+            r"\beps\b",
+            r"\breports? stronger [0-9]{4} results\b",
+            r"\bfull year [0-9]{4} results\b",
+            r"\bfiscal year [0-9]{4} results\b",
+        ],
+    ),
     (
         "credit_liquidity",
         91,
@@ -113,11 +125,14 @@ EVENT_RULES: list[tuple[str, int, list[str]]] = [
             r"\boil (prices?|higher|surge|crisis|soaring)\b",
             r"\bmarket concentration\b",
             r"\bwall street\b",
+            r"\bu\.s\. stocks lower at close of trade\b",
+            r"\bdow jones industrial average down\b",
             r"\bsell[- ]off\b",
             r"\bmarket lower\b",
             r"\bmarket slump[s]?\b",
             r"\bequity market[s]?\b",
             r"\bconflict in iran\b",
+            r"\biran attack\b",
             r"\bgeopolitical tensions?\b",
             r"\bcrowded trade\b",
             r"\bbreadth concern\b",
@@ -189,6 +204,12 @@ EVENT_RULES: list[tuple[str, int, list[str]]] = [
             r"\bmagnificent seven\b",
             r"\btop stocks\b",
             r"\bmarket recap\b",
+            r"\bpriced attractive\b",
+            r"\bvaluation opportunity\b",
+            r"\bmovement within algorithmic entry frameworks\b",
+            r"\bmonthly dividend reits? to buy now\b",
+            r"\bform 424b2\b",
+            r"\bshares fall amid\b",
         ],
     ),
     (
@@ -226,7 +247,17 @@ MACRO_SUBTYPE_RULES: list[tuple[str, list[str]]] = [
         "positioning_concentration",
         [r"\bmarket concentration\b", r"\bcrowded trade\b", r"\bmagnificent seven\b", r"\bbreadth concern\b"],
     ),
-    ("market_color", [r"\bwall street\b", r"\bsell[- ]off\b", r"\bmarket lower\b", r"\bmarket slump[s]?\b"]),
+    (
+        "market_color",
+        [
+            r"\bwall street\b",
+            r"\bsell[- ]off\b",
+            r"\bmarket lower\b",
+            r"\bmarket slump[s]?\b",
+            r"\bu\.s\. stocks lower at close of trade\b",
+            r"\bdow jones industrial average down\b",
+        ],
+    ),
 ]
 
 COMMENTARY_SUBTYPE_RULES: list[tuple[str, list[str]]] = [

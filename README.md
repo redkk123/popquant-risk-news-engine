@@ -520,6 +520,12 @@ For full fallback coverage, set:
 - `THENEWSAPI_API_TOKEN`
 - `ALPHAVANTAGE_API_KEY`
 
+Alpha Vantage now uses:
+
+- primary `tickers` queries for symbol-directed coverage
+- official `topics` fallback (`financial_markets,economy_macro`) when the ticker query is sparse
+- a small built-in pacing delay to respect the free-tier burst limit before the fallback request
+
 ```bash
 python scripts/run_live_marketaux_watchlist.py
 ```
@@ -553,6 +559,12 @@ Fresh sync can use the same provider chain as the live watchlist.
 
 ```bash
 python scripts/run_live_validation.py --windows 2 --window-days 3 --step-days 2
+```
+
+Use a provider subset explicitly when quota pressure makes the full chain wasteful:
+
+```bash
+python scripts/run_live_validation.py --windows 1 --window-days 1 --step-days 1 --symbol-pack core_market_pack --providers alphavantage --symbol-batch-size 8 --max-pages 1
 ```
 
 Run without touching the API by reusing exact-match archived windows only:
@@ -689,6 +701,12 @@ Runs or reuses a live-validation batch, then executes single-run governance, tre
 
 ```bash
 python scripts/run_live_validation_suite.py --windows 2 --window-days 3 --step-days 2
+```
+
+You can also forward a specific provider chain through the suite:
+
+```bash
+python scripts/run_live_validation_suite.py --windows 1 --window-days 1 --step-days 1 --symbol-pack core_market_pack --providers alphavantage --symbol-batch-size 8 --max-pages 1
 ```
 
 Reuse the latest validation batch without new API calls:
@@ -867,13 +885,20 @@ Recent UI additions:
 
 ## Next Step
 
-The core MVP, operator layer, grouped research backtests, versioned calibration registry, local UI, and real-time capital sandbox are in place. The remaining frontier is fresh governed live evidence, larger calibration samples, broader family-level backtests on fresh/live data, and more fresh-session validation of the richer sandbox paths.
+The core MVP, operator layer, grouped research backtests, versioned calibration registry, local UI, and real-time capital sandbox are in place.
+
+What still remains:
+
+- more fresh governed live evidence once provider quotas reset
+- final promotion of the guarded integrated map only if it improves beyond the pure baseline on broader evidence
+- more fresh-session validation of the richer sandbox paths with actionable live signal
+- continued provider/source refinement from new live samples rather than archived runs alone
 
 Repository note:
 
 - the codebase is ready for GitHub publication
-- the project directory itself still does not have a `.git` folder
-- if you want to publish from this path, the remaining repo step is `git init`
+- the project directory has its own `.git` repository
+- publication now is a workflow step, not a missing engineering step
 
 Latest research state:
 
@@ -888,3 +913,6 @@ Current takeaway:
 - `macro` and `guidance` were over-stressed in the raw calibrated map
 - a guarded hybrid map that damps those two families reduces the overshoot materially, but still does not beat the pure baseline end-to-end
 - on the archived live Marketaux batch used for spot validation, the guarded candidate improved `3/3` portfolios (`benchmark_heavy`, `tech_sector`, `digital_assets_finance`)
+- on the latest fresh live-validation window driven by `Alpha Vantage`, the guarded candidate improved `14/15` portfolios in a direct selected-vs-guarded probe compare
+- reprocessing that same fresh Alpha-driven batch with the latest taxonomy rules drives the batch `other` count from `9` to `0` without touching the watchlist-active set
+- that fresh window still does not justify promotion by itself because the grouped aggregate research baseline remains stronger and the trend gate is still sensitive to recent quota failures

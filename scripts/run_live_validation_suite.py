@@ -39,8 +39,20 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional thematic pack name forwarded to live_validation.",
     )
     parser.add_argument("--language", default="en", help="Language filter.")
+    parser.add_argument(
+        "--providers",
+        nargs="*",
+        default=["marketaux", "thenewsapi", "alphavantage"],
+        help="Ordered providers forwarded to live_validation.",
+    )
     parser.add_argument("--limit", type=int, default=3, help="Articles per page.")
     parser.add_argument("--max-pages", type=int, default=2, help="Maximum pages fetched per window.")
+    parser.add_argument(
+        "--symbol-batch-size",
+        type=int,
+        default=5,
+        help="Maximum symbols per upstream provider query batch.",
+    )
     parser.add_argument(
         "--watchlist-config",
         default=str(PROJECT_ROOT / "config" / "watchlists" / "validation_watchlist.yaml"),
@@ -151,10 +163,14 @@ def main() -> int:
                 args.symbol_pack,
                 "--language",
                 args.language,
+                "--providers",
+                *args.providers,
                 "--limit",
                 str(args.limit),
                 "--max-pages",
                 str(args.max_pages),
+                "--symbol-batch-size",
+                str(args.symbol_batch_size),
                 "--watchlist-config",
                 args.watchlist_config,
                 "--output-dir",
