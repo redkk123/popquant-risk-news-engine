@@ -25,6 +25,8 @@ What is in place:
 - NewsAPI.org adapter with ordered fallback support
 - live validation now auto-reorders providers by window freshness
 - capital sandbox now auto-reorders providers by session freshness
+- capital sandbox now supports rigorous `replay_as_of_timestamp` research runs
+- replay batch runner for delayed/as-of evidence packs
 - Alpha Vantage ticker query plus official macro-topic fallback
 - Alpha Vantage burst pacing for the free-tier request limit
 

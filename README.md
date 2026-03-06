@@ -634,10 +634,22 @@ Research mode: replay the latest intraday window without waiting on the clock:
 python scripts/run_capital_sandbox.py --mode replay_intraday --initial-capital 100 --decision-interval-seconds 10 --session-minutes 5
 ```
 
+Time-shifted research mode: replay "yesterday at the same clock time" without looking past that cutoff:
+
+```bash
+python scripts/run_capital_sandbox.py --mode replay_as_of_timestamp --initial-capital 100 --decision-interval-seconds 60 --session-minutes 5 --providers newsapi --as-of-timestamp 2026-03-05T19:04:00-03:00
+```
+
 Compare `5m`, `15m`, and `30m` in one replay run:
 
 ```bash
 python scripts/run_capital_sandbox.py --mode replay_intraday --initial-capital 100 --decision-interval-seconds 10 --compare-session-minutes 5 15 30
+```
+
+Batch multiple `as_of` replays into one evidence pack:
+
+```bash
+python scripts/run_capital_replay_batch.py --providers newsapi --session-minutes 5 --as-of-timestamps 2026-03-05T15:30:00-03:00 2026-03-05T16:30:00-03:00 2026-03-05T17:30:00-03:00 2026-03-05T19:04:00-03:00
 ```
 
 Use a historical fixture-backed run instead:
@@ -668,6 +680,13 @@ Compare-mode outputs:
 - `output/capital_sandbox/<run_id>/capital_compare_equity_curve.csv`
 - `output/capital_sandbox/<run_id>/capital_compare_snapshots.csv`
 - `output/capital_sandbox/<run_id>/capital_compare_report.md`
+
+Replay batch outputs:
+
+- `output/capital_replay_batch/<run_id>/replay_batch_summary.csv`
+- `output/capital_replay_batch/<run_id>/replay_batch_paths.csv`
+- `output/capital_replay_batch/<run_id>/replay_batch_report.md`
+- `output/capital_replay_batch/<run_id>/replay_batch_manifest.json`
 
 ## Run Live Validation Governance
 
@@ -876,6 +895,9 @@ Lightweight publish-friendly examples live under:
 - `showcase/probe_compare_report.md`
 - `showcase/capital_5m_realtime.md`
 - `showcase/capital_5m_realtime_equity_curve.png`
+- `showcase/capital_replay_asof_1904.md`
+- `showcase/capital_replay_asof_1904_equity_curve.png`
+- `showcase/capital_replay_batch_report.md`
 
 ## Run Local UI
 
