@@ -21,6 +21,7 @@ from data.loaders import load_intraday_prices, load_prices
 from data.positions import load_portfolio_config, weights_series
 from data.validation import validate_price_frame
 from event_engine.ingestion.sync_news import ingest_fixture, sync_news
+from event_engine.live_validation import choose_validation_providers
 from event_engine.pipeline import process_raw_documents
 from event_engine.storage.repository import NewsRepository
 from fusion.scenario_mapper import load_event_mapping_config
@@ -55,6 +56,18 @@ def _prepare_capital_sandbox_inputs(
     run_id = f"{pd.Timestamp.now(tz='UTC').strftime('%Y%m%dT%H%M%S%fZ')}_{metadata['portfolio_id']}"
     output_root = Path(output_dir or (PROJECT_ROOT / "output" / "capital_sandbox")) / run_id
     repository = NewsRepository(output_root / "repository")
+    provider_symbols = sorted(set(weights.index.tolist() + ([benchmark] if benchmark else [])))
+
+    provider_plan_before = (
+        published_before
+        or end
+        or (pd.Timestamp.now(tz="UTC") + pd.Timedelta(days=1)).date().isoformat()
+    )
+    provider_plan = choose_validation_providers(
+        list(providers),
+        published_before=provider_plan_before,
+    )
+    selected_providers = provider_plan["providers"]
 
     sync_error: str | None = None
     if news_fixture:
@@ -63,8 +76,8 @@ def _prepare_capital_sandbox_inputs(
         try:
             sync_stats = sync_news(
                 repository,
-                providers=list(providers),
-                symbols=sorted(set(weights.index.tolist() + ([benchmark] if benchmark else []))),
+                providers=selected_providers,
+                symbols=provider_symbols,
                 published_after=published_after,
                 published_before=published_before,
                 limit=limit,
@@ -75,7 +88,7 @@ def _prepare_capital_sandbox_inputs(
             sync_error = str(exc)
             sync_stats = {
                 "provider": "none",
-                "providers_requested": list(providers),
+                "providers_requested": selected_providers,
                 "providers_used": [],
                 "articles_seen": 0,
                 "inserted": 0,
@@ -85,6 +98,8 @@ def _prepare_capital_sandbox_inputs(
                 "degraded_to_empty_news": True,
                 "sync_error": sync_error,
             }
+    sync_stats["provider_strategy"] = provider_plan["strategy"]
+    sync_stats["providers_requested"] = list(sync_stats.get("providers_requested", selected_providers))
     pipeline_stats = process_raw_documents(
         repository,
         alias_path=alias_table or (PROJECT_ROOT / "config" / "news_entity_aliases.csv"),
@@ -160,8 +175,9 @@ def _prepare_capital_sandbox_inputs(
         ),
         "repository": repository,
         "alias_table_path": Path(alias_table or (PROJECT_ROOT / "config" / "news_entity_aliases.csv")),
-        "providers": list(providers),
-        "provider_symbols": sorted(set(weights.index.tolist() + ([benchmark] if benchmark else []))),
+        "providers": selected_providers,
+        "provider_strategy": provider_plan["strategy"],
+        "provider_symbols": provider_symbols,
         "symbol_batch_size": int(symbol_batch_size),
         "limit": int(limit),
         "max_pages": int(max_pages),
@@ -195,10 +211,16 @@ def _build_live_event_refresh_callback(prepared: dict[str, Any]):
         if not published_after:
             published_after = (pd.Timestamp(as_of).tz_convert("UTC") - pd.Timedelta(days=2)).date().isoformat()
         published_before = (pd.Timestamp(as_of).tz_convert("UTC") + pd.Timedelta(days=1)).date().isoformat()
+        provider_plan = choose_validation_providers(
+            providers,
+            published_before=published_before,
+            now=as_of,
+        )
+        refresh_providers = provider_plan["providers"]
         try:
             sync_stats = sync_news(
                 repository,
-                providers=providers,
+                providers=refresh_providers,
                 symbols=symbols,
                 published_after=published_after,
                 published_before=published_before,
@@ -206,6 +228,7 @@ def _build_live_event_refresh_callback(prepared: dict[str, Any]):
                 max_pages=max_pages,
                 symbol_batch_size=symbol_batch_size,
             )
+            sync_stats["provider_strategy"] = provider_plan["strategy"]
             pipeline_stats = process_raw_documents(repository, alias_path=alias_table_path)
             events_frame = repository.load_events_frame()
             return {
@@ -221,8 +244,9 @@ def _build_live_event_refresh_callback(prepared: dict[str, Any]):
                 "error": str(exc),
                 "sync_stats": {
                     "provider": "none",
-                    "providers_requested": list(providers),
+                    "providers_requested": list(refresh_providers),
                     "providers_used": [],
+                    "provider_strategy": provider_plan["strategy"],
                     "articles_seen": 0,
                     "inserted": 0,
                     "skipped": 0,

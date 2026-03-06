@@ -656,6 +656,11 @@ Generated outputs:
 
 If all news providers fail, the sandbox falls back to a degraded no-news mode instead of aborting the session. In that case the pathing policy stays defensive and the sync error is preserved in the run metadata.
 
+The sandbox now also reorders providers automatically by freshness:
+
+- delayed/historical windows prefer `newsapi` first
+- fresher live windows keep `alphavantage` ahead of `newsapi`
+
 Compare-mode outputs:
 
 - `output/capital_sandbox/<run_id>/capital_compare_summary.csv`

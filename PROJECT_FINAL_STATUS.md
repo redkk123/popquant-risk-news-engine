@@ -24,6 +24,7 @@ What is in place:
   - Alpha Vantage
 - NewsAPI.org adapter with ordered fallback support
 - live validation now auto-reorders providers by window freshness
+- capital sandbox now auto-reorders providers by session freshness
 - Alpha Vantage ticker query plus official macro-topic fallback
 - Alpha Vantage burst pacing for the free-tier request limit
 
