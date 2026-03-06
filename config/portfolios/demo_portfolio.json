@@ -1,0 +1,20 @@
+{
+  "portfolio_id": "demo_quant_book",
+  "description": "Baseline long-only portfolio for risk engine development.",
+  "base_currency": "USD",
+  "benchmark": "SPY",
+  "positions": [
+    {
+      "ticker": "AAPL",
+      "weight": 0.45
+    },
+    {
+      "ticker": "MSFT",
+      "weight": 0.35
+    },
+    {
+      "ticker": "SPY",
+      "weight": 0.20
+    }
+  ]
+}

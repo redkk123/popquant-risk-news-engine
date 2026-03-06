@@ -1,0 +1,20 @@
+{
+  "portfolio_id": "healthcare_sector_book",
+  "description": "Healthcare validation portfolio to capture drug, payer, and regulatory event spillover.",
+  "base_currency": "USD",
+  "benchmark": "SPY",
+  "positions": [
+    {
+      "ticker": "UNH",
+      "weight": 0.40
+    },
+    {
+      "ticker": "JNJ",
+      "weight": 0.35
+    },
+    {
+      "ticker": "PFE",
+      "weight": 0.25
+    }
+  ]
+}

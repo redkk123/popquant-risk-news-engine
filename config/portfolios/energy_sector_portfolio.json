@@ -1,0 +1,20 @@
+{
+  "portfolio_id": "energy_sector_book",
+  "description": "Energy validation portfolio to capture oil and geopolitical macro spillovers.",
+  "base_currency": "USD",
+  "benchmark": "XLE",
+  "positions": [
+    {
+      "ticker": "XOM",
+      "weight": 0.55
+    },
+    {
+      "ticker": "CVX",
+      "weight": 0.30
+    },
+    {
+      "ticker": "SPY",
+      "weight": 0.15
+    }
+  ]
+}

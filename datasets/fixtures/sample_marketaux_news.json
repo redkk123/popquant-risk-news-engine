@@ -1,0 +1,101 @@
+{
+  "data": [
+    {
+      "uuid": "sample-001",
+      "title": "Apple cuts guidance after weaker iPhone demand in China",
+      "description": "Apple lowered its revenue outlook and warned of softer near-term demand.",
+      "snippet": "The company cut guidance and analysts flagged weaker sales momentum.",
+      "url": "https://example.com/news/apple-cuts-guidance?utm_source=test",
+      "language": "en",
+      "published_at": "2026-03-05T13:30:00Z",
+      "source": "ExampleWire",
+      "entities": [
+        {
+          "name": "Apple Inc",
+          "symbol": "AAPL",
+          "sentiment_score": -0.7
+        }
+      ]
+    },
+    {
+      "uuid": "sample-002",
+      "title": "Apple cuts guidance after weaker iPhone demand in China",
+      "description": "A second outlet repeats the same story with slightly different wording.",
+      "snippet": "Duplicate of the guidance cut report.",
+      "url": "https://example.com/news/apple-cuts-guidance",
+      "language": "en",
+      "published_at": "2026-03-05T13:45:00Z",
+      "source": "ExampleWire Syndication",
+      "entities": [
+        {
+          "name": "Apple Inc",
+          "symbol": "AAPL",
+          "sentiment_score": -0.6
+        }
+      ]
+    },
+    {
+      "uuid": "sample-003",
+      "title": "Microsoft beats earnings estimates and raises outlook for cloud growth",
+      "description": "Microsoft reported quarterly earnings above expectations and raised guidance.",
+      "snippet": "Azure growth remained strong and management raised outlook.",
+      "url": "https://example.com/news/microsoft-earnings-beat",
+      "language": "en",
+      "published_at": "2026-03-05T14:15:00Z",
+      "source": "StreetSource",
+      "entities": [
+        {
+          "name": "Microsoft Corporation",
+          "symbol": "MSFT",
+          "sentiment_score": 0.8
+        }
+      ]
+    },
+    {
+      "uuid": "sample-004",
+      "title": "Fed officials signal caution as inflation data remains sticky",
+      "description": "Macro investors reacted after officials discussed inflation and rates.",
+      "snippet": "The central bank remains focused on inflation.",
+      "url": "https://example.com/news/fed-inflation-signal",
+      "language": "en",
+      "published_at": "2026-03-05T15:00:00Z",
+      "source": "MacroDesk",
+      "entities": []
+    },
+    {
+      "uuid": "sample-005",
+      "title": "Nvidia to acquire startup in AI infrastructure deal",
+      "description": "Nvidia announced an acquisition aimed at expanding its AI platform.",
+      "snippet": "The acquisition is expected to strengthen Nvidia's data-center roadmap.",
+      "url": "https://example.com/news/nvidia-ai-acquisition",
+      "language": "en",
+      "published_at": "2026-03-05T16:10:00Z",
+      "source": "DealTape",
+      "entities": [
+        {
+          "name": "NVIDIA Corporation",
+          "symbol": "NVDA",
+          "sentiment_score": 0.4
+        }
+      ]
+    },
+    {
+      "uuid": "sample-006",
+      "title": "JPMorgan faces lawsuit over compliance controls",
+      "description": "A legal complaint alleges failures in internal monitoring and disclosures.",
+      "snippet": "The lawsuit could increase regulatory pressure.",
+      "url": "https://example.com/news/jpm-lawsuit",
+      "language": "en",
+      "published_at": "2026-03-05T16:45:00Z",
+      "source": "LegalMarkets",
+      "entities": [
+        {
+          "name": "JPMorgan Chase & Co",
+          "symbol": "JPM",
+          "sentiment_score": -0.5
+        }
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,24 @@
+{
+  "portfolio_id": "semis_sector_book",
+  "description": "Semiconductor validation portfolio spanning AI compute, memory, and diversified chip exposure.",
+  "base_currency": "USD",
+  "benchmark": "QQQ",
+  "positions": [
+    {
+      "ticker": "NVDA",
+      "weight": 0.30
+    },
+    {
+      "ticker": "AMD",
+      "weight": 0.25
+    },
+    {
+      "ticker": "AVGO",
+      "weight": 0.25
+    },
+    {
+      "ticker": "MU",
+      "weight": 0.20
+    }
+  ]
+}

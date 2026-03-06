@@ -1,0 +1,170 @@
+default:
+  tier: tier2
+  bucket: secondary_reporting
+  score_adjustment: 0.0
+  strict_watchlist: false
+  block_watchlist: false
+  block_event_engine: false
+
+rules:
+  - pattern: reuters
+    tier: tier1
+    bucket: primary_reporting
+    score_adjustment: 0.12
+  - pattern: bloomberg
+    tier: tier1
+    bucket: primary_reporting
+    score_adjustment: 0.12
+  - pattern: cnbc
+    tier: tier1
+    bucket: primary_reporting
+    score_adjustment: 0.10
+  - pattern: wsj
+    tier: tier1
+    bucket: primary_reporting
+    score_adjustment: 0.10
+  - pattern: ft.com
+    tier: tier1
+    bucket: primary_reporting
+    score_adjustment: 0.10
+  - pattern: apnews
+    tier: tier1
+    bucket: primary_reporting
+    score_adjustment: 0.10
+  - pattern: marketwatch
+    tier: tier2
+    bucket: secondary_reporting
+    score_adjustment: 0.03
+  - pattern: investing.com
+    tier: tier2
+    bucket: secondary_reporting
+    score_adjustment: 0.01
+  - pattern: yahoo
+    tier: tier2
+    bucket: secondary_reporting
+    score_adjustment: 0.02
+  - pattern: benzinga
+    tier: tier2
+    bucket: fast_news
+    score_adjustment: -0.02
+  - pattern: livemint
+    tier: tier2
+    bucket: secondary_reporting
+    score_adjustment: 0.00
+  - pattern: manilatimes
+    tier: tier2
+    bucket: secondary_reporting
+    score_adjustment: -0.03
+  - pattern: etftrends
+    tier: tier3
+    bucket: niche_recap
+    score_adjustment: -0.12
+    strict_watchlist: true
+  - pattern: thestockmarketwatch
+    tier: tier3
+    bucket: recap_aggregator
+    score_adjustment: -0.18
+    strict_watchlist: true
+  - pattern: zacks
+    tier: tier3
+    bucket: recap_aggregator
+    score_adjustment: -0.15
+    strict_watchlist: true
+  - pattern: marketbeat
+    tier: tier3
+    bucket: recap_aggregator
+    score_adjustment: -0.15
+    strict_watchlist: true
+  - pattern: seekingalpha
+    tier: tier3
+    bucket: opinion_commentary
+    score_adjustment: -0.12
+    strict_watchlist: true
+  - pattern: fool.com
+    tier: tier3
+    bucket: opinion_commentary
+    score_adjustment: -0.15
+    strict_watchlist: true
+  - pattern: 247wallst
+    tier: tier3
+    bucket: recap_aggregator
+    score_adjustment: -0.15
+    strict_watchlist: true
+  - pattern: investorplace
+    tier: tier3
+    bucket: opinion_commentary
+    score_adjustment: -0.15
+    strict_watchlist: true
+  - pattern: globenewswire
+    tier: tier4
+    bucket: press_release_wire
+    score_adjustment: -0.30
+    strict_watchlist: true
+  - pattern: prnewswire
+    tier: tier4
+    bucket: press_release_wire
+    score_adjustment: -0.30
+    strict_watchlist: true
+  - pattern: businesswire
+    tier: tier4
+    bucket: press_release_wire
+    score_adjustment: -0.25
+    strict_watchlist: true
+  - pattern: accesswire
+    tier: tier4
+    bucket: press_release_wire
+    score_adjustment: -0.30
+    strict_watchlist: true
+  - pattern: stocktitan
+    tier: tier4
+    bucket: press_release_wire
+    score_adjustment: -0.30
+    strict_watchlist: true
+  - pattern: eonline.com
+    tier: tier4
+    bucket: general_interest
+    score_adjustment: -0.40
+    block_watchlist: true
+    block_event_engine: true
+  - pattern: justjared.com
+    tier: tier4
+    bucket: general_interest
+    score_adjustment: -0.40
+    block_watchlist: true
+    block_event_engine: true
+  - pattern: uncommongoods.com
+    tier: tier4
+    bucket: general_interest
+    score_adjustment: -0.40
+    block_watchlist: true
+    block_event_engine: true
+  - pattern: quomodocumque.wordpress.com
+    tier: tier4
+    bucket: general_interest
+    score_adjustment: -0.40
+    block_watchlist: true
+    block_event_engine: true
+  - pattern: winnipegfreepress.com
+    tier: tier4
+    bucket: general_interest
+    score_adjustment: -0.40
+    block_watchlist: true
+    block_event_engine: true
+  - pattern: yardbarker.com
+    tier: tier4
+    bucket: general_interest
+    score_adjustment: -0.40
+    block_watchlist: true
+    block_event_engine: true
+  - pattern: profootballtalk.nbcsports.com
+    tier: tier4
+    bucket: general_interest
+    score_adjustment: -0.40
+    block_watchlist: true
+    block_event_engine: true
+  - pattern: trust.zscaler.com
+    tier: tier4
+    bucket: status_page
+    score_adjustment: -0.35
+    block_watchlist: true
+    block_event_engine: true

@@ -1,0 +1,20 @@
+{
+  "portfolio_id": "benchmark_heavy_book",
+  "description": "Broad-market demo portfolio with higher benchmark exposure.",
+  "base_currency": "USD",
+  "benchmark": "SPY",
+  "positions": [
+    {
+      "ticker": "AAPL",
+      "weight": 0.20
+    },
+    {
+      "ticker": "MSFT",
+      "weight": 0.20
+    },
+    {
+      "ticker": "SPY",
+      "weight": 0.60
+    }
+  ]
+}

@@ -1,0 +1,224 @@
+{
+  "data": [
+    {
+      "uuid": "hist-001",
+      "title": "Apple earnings beat estimates and raises outlook for services growth",
+      "description": "Apple reported earnings above expectations and raised outlook for its services segment.",
+      "snippet": "Analysts highlighted strong growth and a beat on earnings.",
+      "url": "https://example.com/history/apple-earnings-raise-2024q1",
+      "language": "en",
+      "published_at": "2024-02-02T13:30:00Z",
+      "source": "ExampleWire",
+      "entities": [
+        {
+          "name": "Apple Inc",
+          "symbol": "AAPL",
+          "sentiment_score": 0.8
+        }
+      ]
+    },
+    {
+      "uuid": "hist-002",
+      "title": "Fed inflation warning as CPI stays sticky and growth could slump",
+      "description": "Macro investors reacted after Fed officials kept focus on inflation and warned of a possible growth slump.",
+      "snippet": "The central bank remains cautious as CPI data stays elevated.",
+      "url": "https://example.com/history/fed-cpi-warning-2024-03",
+      "language": "en",
+      "published_at": "2024-03-13T15:00:00Z",
+      "source": "MacroDesk",
+      "entities": []
+    },
+    {
+      "uuid": "hist-003",
+      "title": "Microsoft cuts guidance as enterprise demand weakens",
+      "description": "Microsoft cut guidance for part of its enterprise software business after weak demand trends.",
+      "snippet": "Management flagged weak bookings and cut guidance.",
+      "url": "https://example.com/history/microsoft-cuts-guidance-2024-04",
+      "language": "en",
+      "published_at": "2024-04-26T14:10:00Z",
+      "source": "StreetSource",
+      "entities": [
+        {
+          "name": "Microsoft Corporation",
+          "symbol": "MSFT",
+          "sentiment_score": -0.7
+        }
+      ]
+    },
+    {
+      "uuid": "hist-004",
+      "title": "Apple launch lifts product momentum with new device release",
+      "description": "Apple launched a new device and investors pointed to strong product momentum.",
+      "snippet": "The product release was viewed as a strong platform expansion.",
+      "url": "https://example.com/history/apple-launch-device-2024-06",
+      "language": "en",
+      "published_at": "2024-06-10T13:45:00Z",
+      "source": "DeviceDaily",
+      "entities": [
+        {
+          "name": "Apple Inc",
+          "symbol": "AAPL",
+          "sentiment_score": 0.6
+        }
+      ]
+    },
+    {
+      "uuid": "hist-005",
+      "title": "Microsoft downgrade after weak cloud growth forecast",
+      "description": "A broker issued a downgrade after a weak forecast for Azure growth.",
+      "snippet": "The downgrade followed concerns over slowing enterprise demand.",
+      "url": "https://example.com/history/microsoft-downgrade-2024-08",
+      "language": "en",
+      "published_at": "2024-08-05T14:20:00Z",
+      "source": "BrokerView",
+      "entities": [
+        {
+          "name": "Microsoft Corporation",
+          "symbol": "MSFT",
+          "sentiment_score": -0.8
+        }
+      ]
+    },
+    {
+      "uuid": "hist-006",
+      "title": "Apple faces antitrust lawsuit over App Store rules",
+      "description": "A new antitrust lawsuit targeted Apple over its App Store restrictions.",
+      "snippet": "The lawsuit intensified legal pressure on the company.",
+      "url": "https://example.com/history/apple-antitrust-lawsuit-2024-10",
+      "language": "en",
+      "published_at": "2024-10-31T15:35:00Z",
+      "source": "LegalMarkets",
+      "entities": [
+        {
+          "name": "Apple Inc",
+          "symbol": "AAPL",
+          "sentiment_score": -0.9
+        }
+      ]
+    },
+    {
+      "uuid": "hist-007",
+      "title": "Microsoft earnings beat and raises outlook for cloud growth",
+      "description": "Microsoft reported stronger earnings and raised outlook for cloud revenue.",
+      "snippet": "Investors focused on strong growth and a beat on earnings.",
+      "url": "https://example.com/history/microsoft-earnings-raise-2025-01",
+      "language": "en",
+      "published_at": "2025-01-30T13:30:00Z",
+      "source": "StreetSource",
+      "entities": [
+        {
+          "name": "Microsoft Corporation",
+          "symbol": "MSFT",
+          "sentiment_score": 0.85
+        }
+      ]
+    },
+    {
+      "uuid": "hist-008",
+      "title": "Fed warning as inflation and payrolls stay hot and equities slump",
+      "description": "Fed speakers warned that inflation and payrolls remain too hot, raising concern about an equity slump.",
+      "snippet": "Macro desks flagged the inflation warning as a risk event.",
+      "url": "https://example.com/history/fed-payrolls-warning-2025-03",
+      "language": "en",
+      "published_at": "2025-03-19T15:00:00Z",
+      "source": "MacroDesk",
+      "entities": []
+    },
+    {
+      "uuid": "hist-009",
+      "title": "Apple cuts guidance after weak demand in China",
+      "description": "Apple cut guidance after a weak demand patch in China hit near-term expectations.",
+      "snippet": "The company warned of weaker sales and cut guidance.",
+      "url": "https://example.com/history/apple-cuts-guidance-2025-05",
+      "language": "en",
+      "published_at": "2025-05-02T13:35:00Z",
+      "source": "ExampleWire",
+      "entities": [
+        {
+          "name": "Apple Inc",
+          "symbol": "AAPL",
+          "sentiment_score": -0.75
+        }
+      ]
+    },
+    {
+      "uuid": "hist-010",
+      "title": "Microsoft appoints CFO after finance chief resigns",
+      "description": "Microsoft appointed a new CFO after its finance chief resigned.",
+      "snippet": "The management transition drew cautious investor attention.",
+      "url": "https://example.com/history/microsoft-cfo-change-2025-07",
+      "language": "en",
+      "published_at": "2025-07-15T14:00:00Z",
+      "source": "ExecWatch",
+      "entities": [
+        {
+          "name": "Microsoft Corporation",
+          "symbol": "MSFT",
+          "sentiment_score": -0.2
+        }
+      ]
+    },
+    {
+      "uuid": "hist-011",
+      "title": "SPDR S&P 500 ETF upgraded as strategists turn optimistic",
+      "description": "Wall Street strategists upgraded the market outlook and turned optimistic on the broad index.",
+      "snippet": "The upgrade reflected stronger sentiment toward the S&P 500 ETF.",
+      "url": "https://example.com/history/spy-upgrade-2025-09",
+      "language": "en",
+      "published_at": "2025-09-04T13:40:00Z",
+      "source": "MarketPulse",
+      "entities": [
+        {
+          "name": "SPDR S&P 500 ETF Trust",
+          "symbol": "SPY",
+          "sentiment_score": 0.55
+        }
+      ]
+    },
+    {
+      "uuid": "hist-012",
+      "title": "Apple acquisition expands AI platform roadmap",
+      "description": "Apple announced an acquisition to expand its AI platform and product roadmap.",
+      "snippet": "The acquisition was viewed as a strategic expansion.",
+      "url": "https://example.com/history/apple-acquisition-2025-11",
+      "language": "en",
+      "published_at": "2025-11-20T14:15:00Z",
+      "source": "DealTape",
+      "entities": [
+        {
+          "name": "Apple Inc",
+          "symbol": "AAPL",
+          "sentiment_score": 0.45
+        }
+      ]
+    },
+    {
+      "uuid": "hist-013",
+      "title": "Microsoft lowered rating to hold after margin decline",
+      "description": "Analysts lowered their rating to hold after a margin decline and weaker estimates.",
+      "snippet": "The downgrade followed concerns about slowing profitability.",
+      "url": "https://example.com/history/microsoft-lowered-rating-2026-01",
+      "language": "en",
+      "published_at": "2026-01-29T14:10:00Z",
+      "source": "BrokerView",
+      "entities": [
+        {
+          "name": "Microsoft Corporation",
+          "symbol": "MSFT",
+          "sentiment_score": -0.65
+        }
+      ]
+    },
+    {
+      "uuid": "hist-014",
+      "title": "Fed inflation warning as CPI stays sticky and equities slump again",
+      "description": "Macro desks reacted after a fresh Fed inflation warning while equity markets threatened another slump.",
+      "snippet": "The CPI release kept inflation in focus for investors.",
+      "url": "https://example.com/history/fed-inflation-warning-2026-02",
+      "language": "en",
+      "published_at": "2026-02-12T15:05:00Z",
+      "source": "MacroDesk",
+      "entities": []
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "portfolio_id": "rates_sensitive_book",
+  "description": "Rates-sensitive validation portfolio spanning REITs, utilities, and regional-bank beta.",
+  "base_currency": "USD",
+  "benchmark": "SPY",
+  "positions": [
+    {
+      "ticker": "PLD",
+      "weight": 0.30
+    },
+    {
+      "ticker": "SPG",
+      "weight": 0.20
+    },
+    {
+      "ticker": "NEE",
+      "weight": 0.20
+    },
+    {
+      "ticker": "DUK",
+      "weight": 0.15
+    },
+    {
+      "ticker": "KRE",
+      "weight": 0.15
+    }
+  ]
+}

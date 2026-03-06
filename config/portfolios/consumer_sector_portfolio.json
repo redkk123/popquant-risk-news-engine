@@ -1,0 +1,24 @@
+{
+  "portfolio_id": "consumer_sector_book",
+  "description": "Consumer-focused validation portfolio spanning ecommerce, retail, and restaurant names.",
+  "base_currency": "USD",
+  "benchmark": "SPY",
+  "positions": [
+    {
+      "ticker": "AMZN",
+      "weight": 0.35
+    },
+    {
+      "ticker": "COST",
+      "weight": 0.25
+    },
+    {
+      "ticker": "WMT",
+      "weight": 0.25
+    },
+    {
+      "ticker": "MCD",
+      "weight": 0.15
+    }
+  ]
+}

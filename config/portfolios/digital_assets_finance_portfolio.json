@@ -1,0 +1,20 @@
+{
+  "portfolio_id": "digital_assets_finance_book",
+  "description": "Digital-assets plus financials portfolio to catch crypto-regulatory news and banking spillover.",
+  "base_currency": "USD",
+  "benchmark": "SPY",
+  "positions": [
+    {
+      "ticker": "COIN",
+      "weight": 0.45
+    },
+    {
+      "ticker": "JPM",
+      "weight": 0.30
+    },
+    {
+      "ticker": "SPY",
+      "weight": 0.25
+    }
+  ]
+}

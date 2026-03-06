@@ -1,0 +1,20 @@
+{
+  "portfolio_id": "financials_sector_book",
+  "description": "Financial-sector validation portfolio to pick up legal, macro, and broker-driven news.",
+  "base_currency": "USD",
+  "benchmark": "SPY",
+  "positions": [
+    {
+      "ticker": "JPM",
+      "weight": 0.40
+    },
+    {
+      "ticker": "BAC",
+      "weight": 0.35
+    },
+    {
+      "ticker": "GS",
+      "weight": 0.25
+    }
+  ]
+}

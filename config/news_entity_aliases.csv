@@ -1,0 +1,64 @@
+ticker,alias,exchange,sector
+AAPL,apple,NASDAQ,technology
+AAPL,apple inc,NASDAQ,technology
+MSFT,microsoft,NASDAQ,technology
+MSFT,microsoft corporation,NASDAQ,technology
+SPY,s&p 500,NYSEARCA,index
+SPY,spdr s&p 500 etf,NYSEARCA,index
+NVDA,nvidia,NASDAQ,technology
+AMD,advanced micro devices,NASDAQ,semis
+AMD,amd,NASDAQ,semis
+AVGO,broadcom,NASDAQ,semis
+MU,micron,NASDAQ,semis
+MU,micron technology,NASDAQ,semis
+AMZN,amazon,NASDAQ,consumer
+AMZN,amazon.com,NASDAQ,consumer
+GOOGL,alphabet,NASDAQ,technology
+GOOGL,alphabet inc,NASDAQ,technology
+GOOGL,google,NASDAQ,technology
+META,meta,NASDAQ,technology
+META,meta platforms,NASDAQ,technology
+META,facebook,NASDAQ,technology
+TSLA,tesla,NASDAQ,consumer
+COST,costco,NASDAQ,consumer
+COST,costco wholesale,NASDAQ,consumer
+WMT,walmart,NYSE,consumer
+WMT,walmart inc,NYSE,consumer
+MCD,mcdonald's,NYSE,consumer
+MCD,mcdonalds,NYSE,consumer
+NFLX,netflix,NASDAQ,internet_platforms
+NFLX,netflix inc,NASDAQ,internet_platforms
+UBER,uber,NYSE,internet_platforms
+UBER,uber technologies,NYSE,internet_platforms
+ORCL,oracle,NYSE,software
+ORCL,oracle corporation,NYSE,software
+CRM,salesforce,NYSE,software
+CRM,salesforce inc,NYSE,software
+ADBE,adobe,NASDAQ,software
+ADBE,adobe inc,NASDAQ,software
+NOW,servicenow,NYSE,software
+NOW,service now,NYSE,software
+JPM,jpmorgan,NYSE,financials
+COIN,coinbase,NASDAQ,financials
+BAC,bank of america,NYSE,financials
+UNH,unitedhealth,NYSE,healthcare
+UNH,unitedhealth group,NYSE,healthcare
+JNJ,johnson & johnson,NYSE,healthcare
+PFE,pfizer,NYSE,healthcare
+PG,procter & gamble,NYSE,defensives
+PG,procter and gamble,NYSE,defensives
+KO,coca-cola,NYSE,defensives
+KO,coca cola,NYSE,defensives
+PEP,pepsico,NASDAQ,defensives
+HON,honeywell,NASDAQ,industrials
+CAT,caterpillar,NYSE,industrials
+DE,deere,NYSE,industrials
+DE,john deere,NYSE,industrials
+PLD,prologis,NYSE,rates_sensitive
+SPG,simon property group,NYSE,rates_sensitive
+NEE,nextera,NYSE,rates_sensitive
+NEE,nextera energy,NYSE,rates_sensitive
+DUK,duke energy,NYSE,rates_sensitive
+KRE,regional bank etf,NYSEARCA,rates_sensitive
+XLF,financial sector,NYSEARCA,financials
+QQQ,nasdaq 100,NASDAQ,index

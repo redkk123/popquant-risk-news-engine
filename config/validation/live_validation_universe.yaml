@@ -1,0 +1,105 @@
+symbols:
+  - AAPL
+  - MSFT
+  - NVDA
+  - GOOGL
+  - META
+  - AMZN
+  - COST
+  - WMT
+  - MCD
+  - NFLX
+  - UBER
+  - JPM
+  - COIN
+  - BAC
+  - GS
+  - UNH
+  - JNJ
+  - PFE
+  - HON
+  - CAT
+  - DE
+  - XOM
+  - CVX
+  - SPY
+  - QQQ
+  - XLE
+  - AMD
+  - AVGO
+  - MU
+  - ORCL
+  - CRM
+  - ADBE
+  - NOW
+  - PG
+  - KO
+  - PEP
+  - PLD
+  - SPG
+  - NEE
+  - DUK
+  - KRE
+
+packs:
+  core_market_pack:
+    symbols:
+      - AAPL
+      - MSFT
+      - GOOGL
+      - META
+      - AMZN
+      - NVDA
+      - SPY
+      - QQQ
+  financial_energy_pack:
+    symbols:
+      - JPM
+      - BAC
+      - GS
+      - COIN
+      - XOM
+      - CVX
+      - XLE
+  health_industrials_pack:
+    symbols:
+      - UNH
+      - JNJ
+      - PFE
+      - HON
+      - CAT
+      - DE
+  consumer_internet_pack:
+    symbols:
+      - AMZN
+      - COST
+      - WMT
+      - MCD
+      - NFLX
+      - UBER
+      - META
+      - GOOGL
+  semis_software_pack:
+    symbols:
+      - NVDA
+      - AMD
+      - AVGO
+      - MU
+      - ORCL
+      - CRM
+      - ADBE
+      - NOW
+  defensives_pack:
+    symbols:
+      - PG
+      - KO
+      - PEP
+      - WMT
+      - JNJ
+  rates_sensitive_pack:
+    symbols:
+      - PLD
+      - SPG
+      - NEE
+      - DUK
+      - KRE

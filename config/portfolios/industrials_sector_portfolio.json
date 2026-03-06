@@ -1,0 +1,20 @@
+{
+  "portfolio_id": "industrials_sector_book",
+  "description": "Industrials validation portfolio to capture capex, manufacturing, and transport-linked event spillover.",
+  "base_currency": "USD",
+  "benchmark": "SPY",
+  "positions": [
+    {
+      "ticker": "HON",
+      "weight": 0.40
+    },
+    {
+      "ticker": "CAT",
+      "weight": 0.35
+    },
+    {
+      "ticker": "DE",
+      "weight": 0.25
+    }
+  ]
+}

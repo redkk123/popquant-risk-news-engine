@@ -1,0 +1,28 @@
+{
+  "portfolio_id": "defensives_book",
+  "description": "Defensive validation portfolio spanning staples, retail defensives, and healthcare quality names.",
+  "base_currency": "USD",
+  "benchmark": "SPY",
+  "positions": [
+    {
+      "ticker": "PG",
+      "weight": 0.30
+    },
+    {
+      "ticker": "KO",
+      "weight": 0.20
+    },
+    {
+      "ticker": "PEP",
+      "weight": 0.20
+    },
+    {
+      "ticker": "WMT",
+      "weight": 0.15
+    },
+    {
+      "ticker": "JNJ",
+      "weight": 0.15
+    }
+  ]
+}

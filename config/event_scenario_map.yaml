@@ -1,0 +1,195 @@
+settings:
+  recency_half_life_days: 3.0
+  max_age_days: 7.0
+  min_decay: 0.25
+  source_scaling:
+    tiers:
+      tier1: 1.05
+      tier2: 1.00
+      tier3: 0.92
+      tier4: 0.80
+    buckets:
+      primary_reporting: 1.00
+      secondary_reporting: 1.00
+      fast_news: 0.97
+      recap_aggregator: 0.90
+      opinion_commentary: 0.88
+      press_release_wire: 0.82
+
+event_mappings:
+  earnings:
+    market_wide: false
+    negative:
+      return_shock: -0.05
+      vol_multiplier: 1.20
+      correlation_multiplier: 1.05
+    positive:
+      return_shock: 0.03
+      vol_multiplier: 1.08
+      correlation_multiplier: 1.00
+
+  guidance:
+    market_wide: false
+    negative:
+      return_shock: -0.07
+      vol_multiplier: 1.25
+      correlation_multiplier: 1.07
+    positive:
+      return_shock: 0.04
+      vol_multiplier: 1.10
+      correlation_multiplier: 1.00
+
+  downgrade:
+    market_wide: false
+    negative:
+      return_shock: -0.06
+      vol_multiplier: 1.20
+      correlation_multiplier: 1.06
+
+  upgrade:
+    market_wide: false
+    positive:
+      return_shock: 0.03
+      vol_multiplier: 1.06
+      correlation_multiplier: 1.00
+
+  legal:
+    market_wide: false
+    negative:
+      return_shock: -0.08
+      vol_multiplier: 1.30
+      correlation_multiplier: 1.08
+
+  m_and_a:
+    market_wide: false
+    positive:
+      return_shock: 0.03
+      vol_multiplier: 1.12
+      correlation_multiplier: 1.02
+    negative:
+      return_shock: -0.04
+      vol_multiplier: 1.15
+      correlation_multiplier: 1.04
+
+  macro:
+    market_wide: true
+    negative:
+      return_shock: -0.03
+      vol_multiplier: 1.30
+      correlation_multiplier: 1.12
+    positive:
+      return_shock: 0.02
+      vol_multiplier: 1.08
+      correlation_multiplier: 1.02
+    subtypes:
+      oil_geopolitical:
+        market_wide: true
+        negative:
+          return_shock: -0.04
+          vol_multiplier: 1.35
+          correlation_multiplier: 1.15
+      policy_inflation:
+        market_wide: true
+        negative:
+          return_shock: -0.035
+          vol_multiplier: 1.32
+          correlation_multiplier: 1.13
+        positive:
+          return_shock: 0.015
+          vol_multiplier: 1.06
+          correlation_multiplier: 1.01
+      positioning_concentration:
+        market_wide: true
+        negative:
+          return_shock: -0.025
+          vol_multiplier: 1.18
+          correlation_multiplier: 1.08
+      market_color:
+        market_wide: true
+        negative:
+          return_shock: -0.02
+          vol_multiplier: 1.18
+          correlation_multiplier: 1.08
+        positive:
+          return_shock: 0.015
+          vol_multiplier: 1.05
+          correlation_multiplier: 1.01
+
+  management:
+    market_wide: false
+    negative:
+      return_shock: -0.03
+      vol_multiplier: 1.12
+      correlation_multiplier: 1.03
+
+  product:
+    market_wide: false
+    positive:
+      return_shock: 0.02
+      vol_multiplier: 1.05
+      correlation_multiplier: 1.01
+    negative:
+      return_shock: -0.02
+      vol_multiplier: 1.08
+      correlation_multiplier: 1.02
+
+  analyst_note:
+    market_wide: false
+    positive:
+      return_shock: 0.015
+      vol_multiplier: 1.03
+      correlation_multiplier: 1.00
+    negative:
+      return_shock: -0.015
+      vol_multiplier: 1.04
+      correlation_multiplier: 1.01
+
+  regulatory_policy:
+    market_wide: true
+    negative:
+      return_shock: -0.035
+      vol_multiplier: 1.28
+      correlation_multiplier: 1.10
+    positive:
+      return_shock: 0.015
+      vol_multiplier: 1.05
+      correlation_multiplier: 1.01
+
+  product_issue:
+    market_wide: false
+    negative:
+      return_shock: -0.045
+      vol_multiplier: 1.18
+      correlation_multiplier: 1.05
+
+  supply_chain:
+    market_wide: false
+    negative:
+      return_shock: -0.05
+      vol_multiplier: 1.20
+      correlation_multiplier: 1.06
+
+  capital_return:
+    market_wide: false
+    positive:
+      return_shock: 0.02
+      vol_multiplier: 1.04
+      correlation_multiplier: 1.00
+
+  credit_liquidity:
+    market_wide: false
+    negative:
+      return_shock: -0.07
+      vol_multiplier: 1.26
+      correlation_multiplier: 1.08
+
+  other:
+    market_wide: false
+    negative:
+      return_shock: -0.01
+      vol_multiplier: 1.05
+      correlation_multiplier: 1.01
+    positive:
+      return_shock: 0.01
+      vol_multiplier: 1.02
+      correlation_multiplier: 1.00

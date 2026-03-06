@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+
+data/cache/
+datasets/raw_news/
+datasets/processed_news/
+
+output/*
+!output/figures/
+output/figures/*
+!output/figures/week1_baseline.png
+
+*.log

@@ -1,0 +1,24 @@
+{
+  "portfolio_id": "internet_platform_book",
+  "description": "Internet-platform validation portfolio covering search, social, streaming, and mobility platforms.",
+  "base_currency": "USD",
+  "benchmark": "QQQ",
+  "positions": [
+    {
+      "ticker": "GOOGL",
+      "weight": 0.30
+    },
+    {
+      "ticker": "META",
+      "weight": 0.30
+    },
+    {
+      "ticker": "NFLX",
+      "weight": 0.20
+    },
+    {
+      "ticker": "UBER",
+      "weight": 0.20
+    }
+  ]
+}

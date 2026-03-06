@@ -1,0 +1,30 @@
+scenarios:
+  - name: broad_equity_selloff
+    description: Broad market drawdown with volatility and correlation expansion.
+    default_return_shock: -0.08
+    vol_multiplier: 1.35
+    correlation_multiplier: 1.15
+
+  - name: mega_cap_tech_hit
+    description: Concentrated stress in large-cap technology with spillover to index exposure.
+    return_shocks:
+      AAPL: -0.12
+      MSFT: -0.10
+      SPY: -0.04
+    vol_multiplier: 1.30
+    correlation_multiplier: 1.10
+
+  - name: apple_single_name_crash
+    description: Single-name crash centered on Apple with limited portfolio spillover.
+    return_shocks:
+      AAPL: -0.20
+      MSFT: -0.03
+      SPY: -0.02
+    vol_multiplier: 1.20
+    correlation_multiplier: 1.05
+
+  - name: volatility_regime_shift
+    description: No large immediate return shock, but a sharp rise in uncertainty and co-movement.
+    default_return_shock: -0.01
+    vol_multiplier: 1.60
+    correlation_multiplier: 1.25

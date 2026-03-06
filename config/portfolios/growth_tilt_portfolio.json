@@ -1,0 +1,20 @@
+{
+  "portfolio_id": "growth_tilt_book",
+  "description": "Growth-heavy demo portfolio concentrated in Apple and Microsoft.",
+  "base_currency": "USD",
+  "benchmark": "SPY",
+  "positions": [
+    {
+      "ticker": "AAPL",
+      "weight": 0.55
+    },
+    {
+      "ticker": "MSFT",
+      "weight": 0.30
+    },
+    {
+      "ticker": "SPY",
+      "weight": 0.15
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+portfolios:
+  - path: config/portfolios/demo_portfolio.json
+  - path: config/portfolios/growth_tilt_portfolio.json
+  - path: config/portfolios/benchmark_heavy_portfolio.json
+  - path: config/portfolios/tech_sector_portfolio.json
+  - path: config/portfolios/financials_sector_portfolio.json
+  - path: config/portfolios/healthcare_sector_portfolio.json
+  - path: config/portfolios/industrials_sector_portfolio.json
+  - path: config/portfolios/energy_sector_portfolio.json
+  - path: config/portfolios/consumer_sector_portfolio.json
+  - path: config/portfolios/internet_platform_portfolio.json
+  - path: config/portfolios/digital_assets_finance_portfolio.json
+  - path: config/portfolios/semis_sector_portfolio.json
+  - path: config/portfolios/software_sector_portfolio.json
+  - path: config/portfolios/defensives_sector_portfolio.json
+  - path: config/portfolios/rates_sensitive_portfolio.json

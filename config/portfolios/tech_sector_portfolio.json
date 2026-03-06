@@ -1,0 +1,24 @@
+{
+  "portfolio_id": "tech_sector_book",
+  "description": "Technology-heavy validation portfolio spanning mega-cap and semiconductor names.",
+  "base_currency": "USD",
+  "benchmark": "QQQ",
+  "positions": [
+    {
+      "ticker": "AAPL",
+      "weight": 0.30
+    },
+    {
+      "ticker": "MSFT",
+      "weight": 0.30
+    },
+    {
+      "ticker": "NVDA",
+      "weight": 0.25
+    },
+    {
+      "ticker": "GOOGL",
+      "weight": 0.15
+    }
+  ]
+}

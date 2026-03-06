@@ -1,0 +1,28 @@
+{
+  "portfolio_id": "software_sector_book",
+  "description": "Software validation portfolio spanning platform software, enterprise apps, and workflow tools.",
+  "base_currency": "USD",
+  "benchmark": "QQQ",
+  "positions": [
+    {
+      "ticker": "MSFT",
+      "weight": 0.30
+    },
+    {
+      "ticker": "ORCL",
+      "weight": 0.20
+    },
+    {
+      "ticker": "CRM",
+      "weight": 0.20
+    },
+    {
+      "ticker": "ADBE",
+      "weight": 0.15
+    },
+    {
+      "ticker": "NOW",
+      "weight": 0.15
+    }
+  ]
+}
