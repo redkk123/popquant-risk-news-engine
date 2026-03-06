@@ -42,7 +42,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--providers",
         nargs="*",
-        default=["marketaux", "thenewsapi", "alphavantage"],
+        default=["marketaux", "thenewsapi", "newsapi", "alphavantage"],
         help="Ordered providers forwarded to live_validation.",
     )
     parser.add_argument("--limit", type=int, default=3, help="Articles per page.")

@@ -39,7 +39,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--providers",
         nargs="*",
-        default=["marketaux", "thenewsapi", "alphavantage"],
+        default=["marketaux", "thenewsapi", "newsapi", "alphavantage"],
         help="Ordered news providers to try.",
     )
     parser.add_argument(
@@ -137,3 +137,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

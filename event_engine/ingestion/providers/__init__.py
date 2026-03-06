@@ -9,11 +9,13 @@ from event_engine.ingestion.providers.base import (
     ProviderFetchResult,
 )
 from event_engine.ingestion.providers.marketaux_provider import MarketauxProvider
+from event_engine.ingestion.providers.newsapi_provider import NewsApiOrgProvider
 from event_engine.ingestion.providers.thenewsapi_provider import TheNewsApiProvider
 
 PROVIDER_REGISTRY = {
     "marketaux": MarketauxProvider,
     "thenewsapi": TheNewsApiProvider,
+    "newsapi": NewsApiOrgProvider,
     "alphavantage": AlphaVantageProvider,
 }
 
@@ -37,6 +39,7 @@ __all__ = [
     "NewsProviderUnavailableError",
     "ProviderFetchResult",
     "TheNewsApiProvider",
+    "NewsApiOrgProvider",
     "PROVIDER_REGISTRY",
     "build_news_provider",
 ]

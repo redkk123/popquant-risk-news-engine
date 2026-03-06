@@ -20,7 +20,9 @@ What is in place:
 - official multi-provider chain:
   - Marketaux
   - The News API
+  - NewsAPI.org
   - Alpha Vantage
+- NewsAPI.org adapter with ordered fallback support
 - Alpha Vantage ticker query plus official macro-topic fallback
 - Alpha Vantage burst pacing for the free-tier request limit
 
@@ -41,6 +43,7 @@ Fresh live evidence improved during the latest cycle:
 2. that fresh window produced `49` events and `198` watchlist event rows
 3. the guarded candidate map improved `14/15` portfolios on a fresh probe compare against the currently selected map
 4. reprocessing that same fresh Alpha-driven batch with the latest taxonomy rules reduced the batch `other` count from `9` to `0`
+5. `NewsAPI.org` is now wired and validated end to end: raw sync, watchlist run, and live-validation probe all completed with `newsapi` as the active provider
 
 The promotion gap still remains:
 
@@ -51,6 +54,7 @@ The promotion gap still remains:
 
 - `Marketaux` quota can block fresh validation windows
 - `The News API` quota can also block fresh validation windows
+- `NewsAPI.org` is delayed on the free plan, so it helps coverage more than same-day freshness
 - `Alpha Vantage` is now wired through broader macro topics, but fresh evidence is still constrained by free-tier limits and sparse article coverage for some symbol batches
 
 ## Publish Readiness

@@ -16,7 +16,7 @@ from event_engine.ingestion.sync_news import ingest_fixture, sync_news
 from event_engine.pipeline import export_events_csv, process_raw_documents
 from event_engine.storage.repository import NewsRepository
 
-DEFAULT_PROVIDERS = ["marketaux", "thenewsapi", "alphavantage"]
+DEFAULT_PROVIDERS = ["marketaux", "thenewsapi", "newsapi", "alphavantage"]
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -39,7 +39,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--providers",
         nargs="*",
         default=DEFAULT_PROVIDERS,
-        help="Ordered news providers to try. Defaults to Marketaux -> The News API -> Alpha Vantage.",
+        help="Ordered news providers to try. Defaults to Marketaux -> The News API -> NewsAPI.org -> Alpha Vantage.",
     )
     parser.add_argument(
         "--symbol-batch-size",
@@ -130,3 +130,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

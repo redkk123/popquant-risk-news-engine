@@ -61,15 +61,15 @@ fixture_path = st.text_input(
 )
 fixture_provider = st.selectbox(
     "Fixture provider",
-    options=["marketaux", "thenewsapi", "alphavantage"],
+    options=["marketaux", "thenewsapi", "newsapi", "alphavantage"],
     index=0,
     disabled=not fixture_mode,
 )
 
 providers = st.multiselect(
     "Live providers",
-    options=["marketaux", "thenewsapi", "alphavantage"],
-    default=["marketaux", "thenewsapi", "alphavantage"],
+    options=["marketaux", "thenewsapi", "newsapi", "alphavantage"],
+    default=["marketaux", "thenewsapi", "newsapi", "alphavantage"],
     disabled=fixture_mode,
 )
 
@@ -152,3 +152,4 @@ if st.button("Run Capital Sandbox", disabled=not bool(portfolio_options)):
 
     st.subheader("Report")
     st.markdown(result["report_markdown"])
+

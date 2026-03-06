@@ -211,6 +211,45 @@ def normalize_alphavantage_article(
     }
 
 
+def normalize_newsapi_article(
+    article: dict[str, Any],
+    *,
+    fetched_at: str,
+    raw_payload_path: str,
+) -> dict[str, Any]:
+    provider_document_id = article.get("url") or article.get("title")
+    title = str(article.get("title", "")).strip()
+    url = str(article.get("url", "")).strip()
+    canonical_url = canonicalize_url(url)
+
+    return {
+        "document_id": build_document_id(
+            "newsapi",
+            str(provider_document_id) if provider_document_id else None,
+            url,
+            title,
+        ),
+        "provider": "newsapi",
+        "provider_document_id": provider_document_id,
+        "source": _coerce_source(article),
+        "published_at": article.get("publishedAt"),
+        "url": url,
+        "canonical_url": canonical_url,
+        "title": title,
+        "description": _coerce_description(article),
+        "snippet": str(article.get("content", "")).strip(),
+        "language": str(article.get("language", "")).strip() or "en",
+        "symbols": _coerce_symbols(article),
+        "entity_names": _coerce_entity_names(article),
+        "entities": article.get("entities", []) or [],
+        "fetched_at": fetched_at,
+        "raw_payload_path": raw_payload_path,
+        "is_duplicate": False,
+        "duplicate_of": None,
+        "dedupe_reason": None,
+    }
+
+
 def normalize_raw_record(raw_record: dict[str, Any]) -> dict[str, Any]:
     provider = str(raw_record.get("provider", "marketaux")).strip().lower()
     payload = raw_record["payload"]
@@ -231,6 +270,12 @@ def normalize_raw_record(raw_record: dict[str, Any]) -> dict[str, Any]:
         )
     if provider == "alphavantage":
         return normalize_alphavantage_article(
+            payload,
+            fetched_at=fetched_at,
+            raw_payload_path=raw_payload_path,
+        )
+    if provider == "newsapi":
+        return normalize_newsapi_article(
             payload,
             fetched_at=fetched_at,
             raw_payload_path=raw_payload_path,

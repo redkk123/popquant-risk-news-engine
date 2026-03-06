@@ -23,7 +23,7 @@ from event_engine.live_validation import (
 )
 from event_engine.run_logging import append_run_event
 
-DEFAULT_PROVIDERS = ["marketaux", "thenewsapi", "alphavantage"]
+DEFAULT_PROVIDERS = ["marketaux", "thenewsapi", "newsapi", "alphavantage"]
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -490,3 +490,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

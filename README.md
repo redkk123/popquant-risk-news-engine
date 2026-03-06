@@ -15,14 +15,14 @@ This project contains a portfolio risk engine plus a deterministic NLP news engi
 - Filtered historical risk model and governance selection
 - Portfolio variance contribution breakdown
 - Monte Carlo simulation for forward loss distributions
-- Financial news ingestion with Marketaux, The News API, and Alpha Vantage fallback
+- Financial news ingestion with Marketaux, The News API, NewsAPI.org, and Alpha Vantage fallback
 - News normalization, deduplication, ticker linking, event taxonomy, severity, and evaluation
 - Source-tier policy with strict gating for recap/opinion/press-release providers
 - Event-conditioned integration between news and risk scenarios
 - Sector-aware event spillover calibration between related tickers
 - Grouped integration backtests by event type, subtype, story bucket, and source tier
 - Versioned calibration snapshots with registry and compare support
-- Live QA audit for each Marketaux batch
+- Live QA audit for each provider-backed batch
 - Multi-window live validation and governance
 - Validation trend reporting and promotion gating
 - Archive-only validation for quota-blocked days
@@ -34,7 +34,7 @@ This project contains a portfolio risk engine plus a deterministic NLP news engi
 - Local Streamlit UI backed by Python services
 - Study docs under `docs/`
 - Secret redaction in operational logs and failure manifests
-- Adaptive Marketaux sync splitting and archived-run reuse under quota pressure
+- Adaptive provider fallback, Marketaux sync splitting, and archived-run reuse under quota pressure
 
 ## Project Structure
 
@@ -512,13 +512,17 @@ Uses an ordered provider chain. By default:
 
 - `marketaux`
 - `thenewsapi`
+- `newsapi`
 - `alphavantage`
 
 For full fallback coverage, set:
 
 - `MARKETAUX_API_TOKEN`
 - `THENEWSAPI_API_TOKEN`
+- `NEWSAPI_API_KEY`
 - `ALPHAVANTAGE_API_KEY`
+
+NewsAPI.org is useful as a quota fallback and for delayed windows. The free plan is not truly live; it applies a 24-hour delay.
 
 Alpha Vantage now uses:
 

@@ -26,7 +26,7 @@ from fusion.scenario_mapper import load_event_mapping_config, map_event_to_scena
 from fusion.sector_mapping import load_ticker_sector_map
 from fusion.watchlist_reporting import build_watchlist_rows, write_watchlist_outputs
 
-DEFAULT_PROVIDERS = ["marketaux", "thenewsapi", "alphavantage"]
+DEFAULT_PROVIDERS = ["marketaux", "thenewsapi", "newsapi", "alphavantage"]
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -66,7 +66,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--providers",
         nargs="*",
         default=DEFAULT_PROVIDERS,
-        help="Ordered news providers to try. Defaults to Marketaux -> The News API -> Alpha Vantage.",
+        help="Ordered news providers to try. Defaults to Marketaux -> The News API -> NewsAPI.org -> Alpha Vantage.",
     )
     parser.add_argument("--limit", type=int, default=3, help="Articles per page.")
     parser.add_argument("--max-pages", type=int, default=2, help="Maximum pages to fetch.")
@@ -353,3 +353,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
