@@ -169,6 +169,7 @@ def test_prepare_capital_sandbox_inputs_prefers_newsapi_for_delayed_windows(monk
     prepared = capital_workbench_module._prepare_capital_sandbox_inputs(
         portfolio_config=portfolio_path,
         mode="historical_daily",
+        session_minutes=5,
         start="2026-03-01",
         end="2026-03-04",
         news_fixture=None,
@@ -182,6 +183,8 @@ def test_prepare_capital_sandbox_inputs_prefers_newsapi_for_delayed_windows(monk
         max_pages=1,
         published_after="2026-03-02",
         published_before=None,
+        as_of_timestamp=None,
+        intraday_period="5d",
         cache_dir=None,
         output_dir=tmp_path / "out",
     )
@@ -237,3 +240,97 @@ def test_live_refresh_callback_keeps_alphavantage_ahead_of_newsapi_for_fresh_win
     assert result["status"] == "success"
     assert result["sync_stats"]["provider_strategy"] == "fresh"
     assert call_details["providers"] == ["marketaux", "thenewsapi", "alphavantage", "newsapi"]
+
+
+def test_prepare_capital_sandbox_inputs_supports_replay_as_of_timestamp(monkeypatch, tmp_path) -> None:
+    portfolio_path = tmp_path / "portfolio.json"
+    portfolio_path.write_text(
+        json.dumps(
+            {
+                "portfolio_id": "demo_book",
+                "description": "demo",
+                "base_currency": "USD",
+                "benchmark": "SPY",
+                "positions": [
+                    {"ticker": "AAPL", "weight": 0.6},
+                    {"ticker": "MSFT", "weight": 0.4},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    class _FakeRepository:
+        def __init__(self, root):
+            self.root = root
+
+        def load_events_frame(self):
+            return pd.DataFrame()
+
+    call_details: dict[str, object] = {}
+
+    def _sync_news(repository, **kwargs):
+        del repository
+        call_details["providers"] = kwargs["providers"]
+        call_details["published_before"] = kwargs["published_before"]
+        return {
+            "provider": "newsapi",
+            "providers_requested": list(kwargs["providers"]),
+            "providers_used": ["newsapi"],
+            "articles_seen": 0,
+            "inserted": 0,
+            "skipped": 0,
+            "pages_fetched": 0,
+            "partial_success": False,
+        }
+
+    monkeypatch.setattr(capital_workbench_module, "sync_news", _sync_news)
+    monkeypatch.setattr(capital_workbench_module, "process_raw_documents", lambda repository, alias_path: {"events": 0})
+    monkeypatch.setattr(capital_workbench_module, "NewsRepository", _FakeRepository)
+    monkeypatch.setattr(
+        capital_workbench_module,
+        "load_intraday_prices",
+        lambda **kwargs: pd.DataFrame(
+            {
+                "AAPL": [100.0, 100.2, 100.4, 100.5],
+                "MSFT": [100.0, 100.1, 100.3, 100.4],
+                "SPY": [100.0, 100.1, 100.2, 100.3],
+            },
+            index=pd.to_datetime(
+                [
+                    "2026-03-05T21:59:00Z",
+                    "2026-03-05T22:00:00Z",
+                    "2026-03-05T22:01:00Z",
+                    "2026-03-05T22:02:00Z",
+                ]
+            ),
+        ),
+    )
+
+    prepared = capital_workbench_module._prepare_capital_sandbox_inputs(
+        portfolio_config=portfolio_path,
+        mode="replay_as_of_timestamp",
+        session_minutes=2,
+        start="2026-03-01",
+        end=None,
+        news_fixture=None,
+        fixture_provider="marketaux",
+        providers=["marketaux", "thenewsapi", "newsapi", "alphavantage"],
+        alias_table=None,
+        event_map_config=None,
+        ticker_sector_map_path=None,
+        symbol_batch_size=5,
+        limit=5,
+        max_pages=1,
+        published_after=None,
+        published_before=None,
+        as_of_timestamp="2026-03-05T19:01:00-03:00",
+        intraday_period="5d",
+        cache_dir=None,
+        output_dir=tmp_path / "out",
+    )
+
+    assert prepared["provider_strategy"] == "delayed"
+    assert call_details["providers"] == ["newsapi", "thenewsapi", "marketaux", "alphavantage"]
+    assert call_details["published_before"] == "2026-03-05T22:01:00+00:00"
+    assert prepared["asset_prices"].index.max() == pd.Timestamp("2026-03-05T22:01:00Z")

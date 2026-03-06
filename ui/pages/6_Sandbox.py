@@ -27,13 +27,22 @@ if not portfolio_options:
     st.stop()
 
 portfolio_path = st.selectbox("Portfolio", options=portfolio_options, index=0)
-mode = st.selectbox("Mode", options=["live_session_real_time", "replay_intraday", "historical_daily"], index=0)
+mode = st.selectbox(
+    "Mode",
+    options=["live_session_real_time", "replay_intraday", "replay_as_of_timestamp", "historical_daily"],
+    index=0,
+)
 
 left, middle, right = st.columns(3)
 initial_capital = left.number_input("Initial capital", min_value=10.0, value=100.0, step=10.0)
 interval_options = [60, 120, 300] if mode == "live_session_real_time" else [10, 20, 30, 60]
 decision_interval_seconds = middle.selectbox("Decision interval", options=interval_options, index=0)
 session_minutes = right.selectbox("Session preset", options=[5, 15, 30], index=0)
+as_of_timestamp = st.text_input(
+    "Replay as-of timestamp",
+    value="2026-03-05T19:04:00-03:00",
+    disabled=(mode != "replay_as_of_timestamp"),
+)
 news_refresh_minutes = st.number_input(
     "News refresh cadence (minutes)",
     min_value=1,
@@ -106,6 +115,7 @@ if st.button("Run Capital Sandbox", disabled=not bool(portfolio_options)):
             news_fixture=fixture_path if fixture_mode else None,
             fixture_provider=fixture_provider,
             providers=providers,
+            as_of_timestamp=as_of_timestamp if mode == "replay_as_of_timestamp" else None,
             output_dir=PROJECT_ROOT / "output" / "capital_sandbox",
         )
     else:
@@ -121,6 +131,7 @@ if st.button("Run Capital Sandbox", disabled=not bool(portfolio_options)):
             news_fixture=fixture_path if fixture_mode else None,
             fixture_provider=fixture_provider,
             providers=providers,
+            as_of_timestamp=as_of_timestamp if mode == "replay_as_of_timestamp" else None,
             output_dir=PROJECT_ROOT / "output" / "capital_sandbox",
         )
     st.success(f"Sandbox saved to {result['output_root']}")

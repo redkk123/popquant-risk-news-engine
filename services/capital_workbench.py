@@ -33,6 +33,7 @@ def _prepare_capital_sandbox_inputs(
     *,
     portfolio_config: str | Path,
     mode: str,
+    session_minutes: int,
     start: str,
     end: str | None,
     news_fixture: str | Path | None,
@@ -46,6 +47,8 @@ def _prepare_capital_sandbox_inputs(
     max_pages: int,
     published_after: str | None,
     published_before: str | None,
+    as_of_timestamp: str | None,
+    intraday_period: str,
     cache_dir: str | Path | None,
     output_dir: str | Path | None,
 ) -> dict[str, Any]:
@@ -58,8 +61,24 @@ def _prepare_capital_sandbox_inputs(
     repository = NewsRepository(output_root / "repository")
     provider_symbols = sorted(set(weights.index.tolist() + ([benchmark] if benchmark else [])))
 
+    effective_published_after = published_after
+    effective_published_before = published_before
+    if mode == "replay_as_of_timestamp":
+        if not as_of_timestamp:
+            raise ValueError("replay_as_of_timestamp mode requires as_of_timestamp.")
+        as_of = pd.Timestamp(as_of_timestamp)
+        if as_of.tzinfo is None:
+            as_of = as_of.tz_localize("UTC")
+        else:
+            as_of = as_of.tz_convert("UTC")
+        if not effective_published_before:
+            effective_published_before = as_of.isoformat()
+        if not effective_published_after:
+            effective_published_after = (as_of - pd.Timedelta(days=2)).isoformat()
+
     provider_plan_before = (
-        published_before
+        effective_published_before
+        or as_of_timestamp
         or end
         or (pd.Timestamp.now(tz="UTC") + pd.Timedelta(days=1)).date().isoformat()
     )
@@ -78,8 +97,8 @@ def _prepare_capital_sandbox_inputs(
                 repository,
                 providers=selected_providers,
                 symbols=provider_symbols,
-                published_after=published_after,
-                published_before=published_before,
+                published_after=effective_published_after,
+                published_before=effective_published_before,
                 limit=limit,
                 max_pages=max_pages,
                 symbol_batch_size=symbol_batch_size,
@@ -139,6 +158,43 @@ def _prepare_capital_sandbox_inputs(
         asset_prices = prices.loc[:, weights.index.tolist()]
         benchmark_prices = prices[benchmark] if benchmark and benchmark in prices.columns else None
         price_fetcher = _price_fetcher
+    elif mode == "replay_as_of_timestamp":
+        if not as_of_timestamp:
+            raise ValueError("replay_as_of_timestamp mode requires as_of_timestamp.")
+        as_of = pd.Timestamp(as_of_timestamp)
+        if as_of.tzinfo is None:
+            as_of = as_of.tz_localize("UTC")
+        else:
+            as_of = as_of.tz_convert("UTC")
+        prices = load_intraday_prices(
+            tickers=weights.index.tolist() + ([benchmark] if benchmark else []),
+            period=intraday_period,
+            interval="1m",
+        )
+        prices = validate_price_frame(prices)
+        aligned_index = pd.DatetimeIndex(prices.index)
+        if aligned_index.tz is None:
+            aligned_index = aligned_index.tz_localize("UTC")
+        else:
+            aligned_index = aligned_index.tz_convert("UTC")
+        prices.index = aligned_index
+        anchor_candidates = prices.index[prices.index <= as_of]
+        if len(anchor_candidates) == 0:
+            raise RuntimeError(
+                f"No intraday prices available up to {as_of.isoformat()} for replay_as_of_timestamp."
+            )
+        anchor = anchor_candidates.max()
+        session_start = anchor - pd.Timedelta(minutes=int(max(1, session_minutes)))
+        trimmed = prices.loc[(prices.index >= session_start) & (prices.index <= anchor)].copy()
+        if trimmed.empty:
+            raise RuntimeError(
+                f"No intraday prices available up to {as_of.isoformat()} for replay_as_of_timestamp."
+            )
+        effective_interval_seconds = None
+        snapshot_frequency = "1min"
+        asset_prices = trimmed.loc[:, weights.index.tolist()]
+        benchmark_prices = trimmed[benchmark] if benchmark and benchmark in trimmed.columns else None
+        price_fetcher = None
     elif mode == "historical_daily":
         prices = load_prices(
             tickers=weights.index.tolist() + ([benchmark] if benchmark else []),
@@ -154,7 +210,7 @@ def _prepare_capital_sandbox_inputs(
         price_fetcher = None
     else:
         raise ValueError(
-            "Unsupported capital sandbox mode. Use live_session_real_time, replay_intraday, or historical_daily."
+            "Unsupported capital sandbox mode. Use live_session_real_time, replay_intraday, replay_as_of_timestamp, or historical_daily."
         )
 
     return {
@@ -181,8 +237,11 @@ def _prepare_capital_sandbox_inputs(
         "symbol_batch_size": int(symbol_batch_size),
         "limit": int(limit),
         "max_pages": int(max_pages),
-        "published_after": published_after,
-        "published_before": published_before,
+        "published_after": effective_published_after,
+        "published_before": effective_published_before,
+        "as_of_timestamp": as_of_timestamp,
+        "replay_anchor_timestamp": anchor.isoformat() if mode == "replay_as_of_timestamp" else None,
+        "intraday_period": intraday_period,
         "news_fixture": str(news_fixture) if news_fixture else None,
         "output_root": output_root,
         "mode": mode,
@@ -270,7 +329,7 @@ def _run_single_capital_session(
     slippage_rate: float,
 ) -> dict[str, Any]:
     mode = prepared["mode"]
-    if mode == "replay_intraday":
+    if mode in {"replay_intraday", "replay_as_of_timestamp"}:
         effective_interval_seconds = int(decision_interval_seconds)
         effective_session_minutes = int(session_minutes)
     elif mode == "live_session_real_time":
@@ -364,7 +423,7 @@ def _run_single_capital_session(
         frequency=prepared["snapshot_frequency"],
     )
 
-    if mode in {"replay_intraday", "live_session_real_time"}:
+    if mode in {"replay_intraday", "replay_as_of_timestamp", "live_session_real_time"}:
         session_label = f"{int(session_minutes)}m"
     else:
         session_label = "daily"
@@ -401,7 +460,7 @@ def run_capital_sandbox_workbench(
     end: str | None = None,
     news_fixture: str | Path | None = None,
     fixture_provider: str = "marketaux",
-    providers: list[str] | tuple[str, ...] = ("marketaux", "thenewsapi", "alphavantage"),
+    providers: list[str] | tuple[str, ...] = ("marketaux", "thenewsapi", "newsapi", "alphavantage"),
     alias_table: str | Path | None = None,
     event_map_config: str | Path | None = None,
     ticker_sector_map_path: str | Path | None = None,
@@ -412,12 +471,15 @@ def run_capital_sandbox_workbench(
     max_pages: int = 1,
     published_after: str | None = None,
     published_before: str | None = None,
+    as_of_timestamp: str | None = None,
+    intraday_period: str = "5d",
     cache_dir: str | Path | None = None,
     output_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     prepared = _prepare_capital_sandbox_inputs(
         portfolio_config=portfolio_config,
         mode=mode,
+        session_minutes=session_minutes,
         start=start,
         end=end,
         news_fixture=news_fixture,
@@ -431,6 +493,8 @@ def run_capital_sandbox_workbench(
         max_pages=max_pages,
         published_after=published_after,
         published_before=published_before,
+        as_of_timestamp=as_of_timestamp,
+        intraday_period=intraday_period,
         cache_dir=cache_dir,
         output_dir=output_dir,
     )
@@ -457,6 +521,10 @@ def run_capital_sandbox_workbench(
                 "providers_used",
                 [prepared["sync_stats"].get("provider")],
             ),
+            "provider_strategy": prepared.get("provider_strategy"),
+            "as_of_timestamp": prepared.get("as_of_timestamp"),
+            "replay_anchor_timestamp": prepared.get("replay_anchor_timestamp"),
+            "intraday_period": prepared.get("intraday_period"),
             "session_meta": session_result.get("session_meta", {}),
         },
     )
@@ -534,7 +602,7 @@ def run_capital_sandbox_compare_workbench(
     end: str | None = None,
     news_fixture: str | Path | None = None,
     fixture_provider: str = "marketaux",
-    providers: list[str] | tuple[str, ...] = ("marketaux", "thenewsapi", "alphavantage"),
+    providers: list[str] | tuple[str, ...] = ("marketaux", "thenewsapi", "newsapi", "alphavantage"),
     alias_table: str | Path | None = None,
     event_map_config: str | Path | None = None,
     ticker_sector_map_path: str | Path | None = None,
@@ -545,14 +613,19 @@ def run_capital_sandbox_compare_workbench(
     max_pages: int = 1,
     published_after: str | None = None,
     published_before: str | None = None,
+    as_of_timestamp: str | None = None,
+    intraday_period: str = "5d",
     cache_dir: str | Path | None = None,
     output_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     if mode == "live_session_real_time":
-        raise ValueError("Session compare is only supported for replay_intraday or historical_daily.")
+        raise ValueError(
+            "Session compare is only supported for replay_intraday, replay_as_of_timestamp, or historical_daily."
+        )
     prepared = _prepare_capital_sandbox_inputs(
         portfolio_config=portfolio_config,
         mode=mode,
+        session_minutes=max(int(value) for value in session_minutes_list) if session_minutes_list else 5,
         start=start,
         end=end,
         news_fixture=news_fixture,
@@ -566,6 +639,8 @@ def run_capital_sandbox_compare_workbench(
         max_pages=max_pages,
         published_after=published_after,
         published_before=published_before,
+        as_of_timestamp=as_of_timestamp,
+        intraday_period=intraday_period,
         cache_dir=cache_dir,
         output_dir=output_dir,
     )
@@ -604,8 +679,19 @@ def run_capital_sandbox_compare_workbench(
             "portfolio_id": prepared["metadata"]["portfolio_id"],
             "mode": mode,
             "initial_capital": initial_capital,
-            "decision_interval_seconds": decision_interval_seconds if mode == "replay_intraday" else 86400,
-            "session_labels": [f"{value}m" if mode == "replay_intraday" else "daily" for value in sessions],
+            "decision_interval_seconds": (
+                decision_interval_seconds
+                if mode in {"replay_intraday", "replay_as_of_timestamp"}
+                else 86400
+            ),
+            "session_labels": [
+                f"{value}m" if mode in {"replay_intraday", "replay_as_of_timestamp"} else "daily"
+                for value in sessions
+            ],
+            "provider_strategy": prepared.get("provider_strategy"),
+            "as_of_timestamp": prepared.get("as_of_timestamp"),
+            "replay_anchor_timestamp": prepared.get("replay_anchor_timestamp"),
+            "intraday_period": prepared.get("intraday_period"),
         },
     )
     outputs = write_capital_compare_outputs(

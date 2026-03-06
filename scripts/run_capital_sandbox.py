@@ -25,7 +25,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--mode",
         default="live_session_real_time",
-        choices=["live_session_real_time", "replay_intraday", "historical_daily"],
+        choices=["live_session_real_time", "replay_intraday", "replay_as_of_timestamp", "historical_daily"],
         help="Sandbox mode.",
     )
     parser.add_argument("--initial-capital", type=float, default=100.0, help="Initial simulated capital.")
@@ -90,6 +90,16 @@ def _build_parser() -> argparse.ArgumentParser:
         default=(date.today() + timedelta(days=1)).isoformat(),
         help="Upper date bound for live news sync.",
     )
+    parser.add_argument(
+        "--as-of-timestamp",
+        default="",
+        help="Replay cutoff timestamp for replay_as_of_timestamp mode, e.g. 2026-03-05T19:04:00-03:00.",
+    )
+    parser.add_argument(
+        "--intraday-period",
+        default="5d",
+        help="Yahoo intraday period used to source replay_as_of_timestamp minute bars.",
+    )
     parser.add_argument("--limit", type=int, default=3, help="Articles per page.")
     parser.add_argument("--max-pages", type=int, default=1, help="Maximum pages per provider.")
     parser.add_argument("--symbol-batch-size", type=int, default=5, help="Symbol batch size for provider sync.")
@@ -105,8 +115,17 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     args = _build_parser().parse_args()
+    default_live_news_after = (date.today() - timedelta(days=2)).isoformat()
+    default_live_news_before = (date.today() + timedelta(days=1)).isoformat()
     if args.mode == "live_session_real_time" and args.compare_session_minutes:
         raise SystemExit("compare-session-minutes is not supported in live_session_real_time mode.")
+    published_after = args.published_after
+    published_before = args.published_before
+    if args.mode == "replay_as_of_timestamp":
+        if published_after == default_live_news_after:
+            published_after = None
+        if published_before == default_live_news_before:
+            published_before = None
     if args.compare_session_minutes:
         result = run_capital_sandbox_compare_workbench(
             portfolio_config=args.portfolio_config,
@@ -124,8 +143,10 @@ def main() -> int:
             symbol_batch_size=args.symbol_batch_size,
             limit=args.limit,
             max_pages=args.max_pages,
-            published_after=args.published_after,
-            published_before=args.published_before,
+            published_after=published_after,
+            published_before=published_before,
+            as_of_timestamp=args.as_of_timestamp or None,
+            intraday_period=args.intraday_period,
             output_dir=args.output_dir,
         )
     else:
@@ -146,8 +167,10 @@ def main() -> int:
             symbol_batch_size=args.symbol_batch_size,
             limit=args.limit,
             max_pages=args.max_pages,
-            published_after=args.published_after,
-            published_before=args.published_before,
+            published_after=published_after,
+            published_before=published_before,
+            as_of_timestamp=args.as_of_timestamp or None,
+            intraday_period=args.intraday_period,
             output_dir=args.output_dir,
         )
     summary = result["summary_frame"]
