@@ -7,6 +7,16 @@ from typing import Any, Iterable
 import pandas as pd
 import yaml
 
+FRESH_PROVIDER_PRIORITY = ["marketaux", "thenewsapi", "alphavantage", "newsapi"]
+DELAYED_PROVIDER_PRIORITY = ["newsapi", "thenewsapi", "marketaux", "alphavantage"]
+
+
+def _coerce_utc_timestamp(value: str | pd.Timestamp) -> pd.Timestamp:
+    timestamp = pd.Timestamp(value)
+    if timestamp.tzinfo is None:
+        return timestamp.tz_localize("UTC")
+    return timestamp.tz_convert("UTC")
+
 
 def build_validation_windows(
     *,
@@ -40,6 +50,34 @@ def build_validation_windows(
             }
         )
     return rows
+
+
+def choose_validation_providers(
+    providers: list[str] | tuple[str, ...],
+    *,
+    published_before: str | pd.Timestamp,
+    now: str | pd.Timestamp | None = None,
+) -> dict[str, Any]:
+    normalized: list[str] = []
+    for provider in providers:
+        name = str(provider).strip().lower()
+        if name and name not in normalized:
+            normalized.append(name)
+    if not normalized:
+        raise ValueError("At least one provider must be supplied.")
+
+    window_end = _coerce_utc_timestamp(published_before)
+    now_utc = _coerce_utc_timestamp(now or pd.Timestamp.now(tz="UTC"))
+    delayed_cutoff = (now_utc - pd.Timedelta(days=1)).normalize()
+    strategy = "delayed" if window_end.normalize() <= delayed_cutoff else "fresh"
+    priority = DELAYED_PROVIDER_PRIORITY if strategy == "delayed" else FRESH_PROVIDER_PRIORITY
+    ordered = [provider for provider in priority if provider in normalized]
+    ordered.extend(provider for provider in normalized if provider not in ordered)
+    return {
+        "strategy": strategy,
+        "providers": ordered,
+        "delayed_cutoff": delayed_cutoff.date().isoformat(),
+    }
 
 
 def load_json(path: str | Path) -> dict[str, Any]:

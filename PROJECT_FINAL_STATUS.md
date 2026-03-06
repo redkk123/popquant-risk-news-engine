@@ -23,6 +23,7 @@ What is in place:
   - NewsAPI.org
   - Alpha Vantage
 - NewsAPI.org adapter with ordered fallback support
+- live validation now auto-reorders providers by window freshness
 - Alpha Vantage ticker query plus official macro-topic fallback
 - Alpha Vantage burst pacing for the free-tier request limit
 

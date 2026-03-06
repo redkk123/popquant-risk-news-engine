@@ -15,6 +15,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from event_engine.live_validation import (
     build_validation_windows,
+    choose_validation_providers,
     collect_gap_samples,
     load_events_frame,
     load_json,
@@ -206,6 +207,11 @@ def main() -> int:
     for window in windows:
         window_root = runs_root / window["window_label"]
         window_root.mkdir(parents=True, exist_ok=True)
+        provider_plan = choose_validation_providers(
+            args.providers,
+            published_before=window["published_before"],
+        )
+        window_providers = provider_plan["providers"]
         command = [
             sys.executable,
             str(runner_path),
@@ -216,7 +222,7 @@ def main() -> int:
             "--symbols",
             *symbols,
             "--providers",
-            *args.providers,
+            *window_providers,
             "--language",
             args.language,
             "--limit",
@@ -237,7 +243,12 @@ def main() -> int:
             run_log_path,
             stage=window["window_label"],
             status="start",
-            details={"command": None if args.archive_only else command, "archive_only": args.archive_only},
+            details={
+                "command": None if args.archive_only else command,
+                "archive_only": args.archive_only,
+                "provider_strategy": provider_plan["strategy"],
+                "providers": window_providers,
+            },
         )
         if args.archive_only:
             completed = subprocess.CompletedProcess(command, returncode=0, stdout="", stderr="")
@@ -268,9 +279,11 @@ def main() -> int:
                         **window,
                         "status": "failed",
                         "window_origin": "failed",
-                        "fresh_sync_requested": not args.archive_only,
-                        "quota_blocked": bool(failure_context["quota_blocked"]),
-                        "returncode": int(completed.returncode),
+                    "fresh_sync_requested": not args.archive_only,
+                    "quota_blocked": bool(failure_context["quota_blocked"]),
+                    "provider_strategy": provider_plan["strategy"],
+                    "providers_requested": ",".join(window_providers),
+                    "returncode": int(completed.returncode),
                         "stderr": completed.stderr.strip(),
                         "stdout": completed.stdout.strip(),
                         "failure_text": failure_context["failure_text"],
@@ -302,6 +315,8 @@ def main() -> int:
                     "window_origin": "failed",
                     "fresh_sync_requested": False,
                     "quota_blocked": False,
+                    "provider_strategy": provider_plan["strategy"],
+                    "providers_requested": ",".join(window_providers),
                     "returncode": 0,
                     "stderr": "",
                     "stdout": "",
@@ -368,6 +383,8 @@ def main() -> int:
             "window_origin": "archive_reuse" if reused_run_dir else "fresh_sync",
             "fresh_sync_requested": not args.archive_only,
             "quota_blocked": bool(failure_context["quota_blocked"]) if reused_run_dir else False,
+            "provider_strategy": provider_plan["strategy"],
+            "providers_requested": ",".join(window_providers),
             "returncode": int(completed.returncode),
             "run_dir": str(run_dir),
             "reused_from_archive": bool(reused_run_dir),
@@ -410,6 +427,8 @@ def main() -> int:
             details={
                 "run_dir": str(run_dir),
                 "reused_from_archive": bool(reused_run_dir),
+                "provider_strategy": provider_plan["strategy"],
+                "providers": window_providers,
                 "total_events": total_events,
                 "event_rows": int(manifest.get("event_rows", 0)),
             },

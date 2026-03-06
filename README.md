@@ -561,6 +561,11 @@ Runs the live watchlist workflow across multiple date windows and aggregates a s
 
 Fresh sync can use the same provider chain as the live watchlist.
 
+Validation now reorders that chain by window freshness:
+
+- delayed windows prefer `newsapi` first to exploit the free-plan 24h-delayed coverage
+- fresher windows keep `alphavantage` ahead of `newsapi`
+
 ```bash
 python scripts/run_live_validation.py --windows 2 --window-days 3 --step-days 2
 ```

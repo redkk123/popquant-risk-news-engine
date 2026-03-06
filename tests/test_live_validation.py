@@ -4,6 +4,7 @@ import pandas as pd
 
 from event_engine.live_validation import (
     build_validation_windows,
+    choose_validation_providers,
     collect_gap_samples,
     load_symbol_universe,
     summarize_validation_runs,
@@ -16,6 +17,28 @@ def test_build_validation_windows_returns_descending_windows() -> None:
     assert len(windows) == 3
     assert windows[0]["published_before"] == "2026-03-06"
     assert windows[1]["published_before"] == "2026-03-05"
+
+
+def test_choose_validation_providers_prefers_newsapi_for_delayed_windows() -> None:
+    decision = choose_validation_providers(
+        ["marketaux", "thenewsapi", "newsapi", "alphavantage"],
+        published_before="2026-03-05",
+        now="2026-03-06T12:00:00Z",
+    )
+
+    assert decision["strategy"] == "delayed"
+    assert decision["providers"] == ["newsapi", "thenewsapi", "marketaux", "alphavantage"]
+
+
+def test_choose_validation_providers_keeps_alpha_ahead_of_newsapi_for_fresh_windows() -> None:
+    decision = choose_validation_providers(
+        ["marketaux", "thenewsapi", "newsapi", "alphavantage"],
+        published_before="2026-03-06",
+        now="2026-03-06T12:00:00Z",
+    )
+
+    assert decision["strategy"] == "fresh"
+    assert decision["providers"] == ["marketaux", "thenewsapi", "alphavantage", "newsapi"]
 
 
 def test_collect_gap_samples_flags_other_and_zero_link_non_macro() -> None:
