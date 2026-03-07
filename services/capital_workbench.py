@@ -51,12 +51,13 @@ def _prepare_capital_sandbox_inputs(
     intraday_period: str,
     cache_dir: str | Path | None,
     output_dir: str | Path | None,
+    run_id_override: str | None = None,
 ) -> dict[str, Any]:
     metadata, positions = load_portfolio_config(portfolio_config)
     weights = weights_series(positions)
     benchmark = metadata.get("benchmark")
 
-    run_id = f"{pd.Timestamp.now(tz='UTC').strftime('%Y%m%dT%H%M%S%fZ')}_{metadata['portfolio_id']}"
+    run_id = run_id_override or f"{pd.Timestamp.now(tz='UTC').strftime('%Y%m%dT%H%M%S%fZ')}_{metadata['portfolio_id']}"
     output_root = Path(output_dir or (PROJECT_ROOT / "output" / "capital_sandbox")) / run_id
     repository = NewsRepository(output_root / "repository")
     provider_symbols = sorted(set(weights.index.tolist() + ([benchmark] if benchmark else [])))
@@ -477,6 +478,7 @@ def run_capital_sandbox_workbench(
     intraday_period: str = "5d",
     cache_dir: str | Path | None = None,
     output_dir: str | Path | None = None,
+    run_id_override: str | None = None,
 ) -> dict[str, Any]:
     prepared = _prepare_capital_sandbox_inputs(
         portfolio_config=portfolio_config,
@@ -499,6 +501,7 @@ def run_capital_sandbox_workbench(
         intraday_period=intraday_period,
         cache_dir=cache_dir,
         output_dir=output_dir,
+        run_id_override=run_id_override,
     )
     session_result = _run_single_capital_session(
         prepared=prepared,
@@ -625,6 +628,7 @@ def run_capital_sandbox_compare_workbench(
     intraday_period: str = "5d",
     cache_dir: str | Path | None = None,
     output_dir: str | Path | None = None,
+    run_id_override: str | None = None,
 ) -> dict[str, Any]:
     if mode == "live_session_real_time":
         raise ValueError(
@@ -651,6 +655,7 @@ def run_capital_sandbox_compare_workbench(
         intraday_period=intraday_period,
         cache_dir=cache_dir,
         output_dir=output_dir,
+        run_id_override=run_id_override,
     )
     sessions = sorted({int(value) for value in session_minutes_list if int(value) > 0})
     if not sessions:

@@ -22,7 +22,7 @@ from services.capital_workbench import (
     run_capital_sandbox_workbench,
 )
 from services.ops_workbench import build_overview_payload
-from services.portfolio_manager import list_portfolio_paths
+from services.portfolio_manager import list_portfolio_paths, load_portfolio_payload
 from services.provider_tokens import (
     PROVIDER_ENV_VARS,
     clear_provider_tokens,
@@ -60,6 +60,13 @@ def _find_portfolio_option(filename: str) -> str | None:
         if Path(option).name == filename:
             return option
     return None
+
+
+def _build_live_run_root(portfolio_path: str | Path) -> tuple[str, Path]:
+    payload = load_portfolio_payload(portfolio_path)
+    portfolio_id = str(payload["portfolio_id"])
+    run_id = f"{pd.Timestamp.now(tz='UTC').strftime('%Y%m%dT%H%M%S%fZ')}_{portfolio_id}"
+    return run_id, PROJECT_ROOT / "output" / "capital_sandbox" / run_id
 
 
 def _provider_token_status() -> pd.DataFrame:
@@ -613,6 +620,8 @@ run_tab, batch_tab = st.tabs(["Single Run", "Replay Batch"])
 with run_tab:
     if st.button("Run Capital Sandbox", disabled=not bool(portfolio_options), use_container_width=True):
         if mode == "live_session_real_time" and not compare_sessions:
+            run_id_override, run_root = _build_live_run_root(portfolio_path)
+            st.session_state["sandbox_current_run_root"] = str(run_root)
             thread = threading.Thread(
                 target=_run_live_sandbox_in_background,
                 kwargs={
@@ -630,6 +639,7 @@ with run_tab:
                     "providers": providers,
                     "as_of_timestamp": as_of_timestamp if mode == "replay_as_of_timestamp" else None,
                     "output_dir": PROJECT_ROOT / "output" / "capital_sandbox",
+                    "run_id_override": run_id_override,
                 },
                 daemon=True,
             )
@@ -724,4 +734,7 @@ with refresh_col:
         key="sandbox_auto_refresh_enabled",
         help="Recarrega a pagina a cada 5s enquanto a ultima run live estiver running/completing.",
     )
-_render_live_snapshot_gallery(output_root=None, title="Latest Live Snapshot Tracking")
+_render_live_snapshot_gallery(
+    output_root=st.session_state.get("sandbox_current_run_root"),
+    title="Latest Live Snapshot Tracking",
+)
