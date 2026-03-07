@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
+
 from services.pathing import PROJECT_ROOT
 
 
@@ -59,3 +61,51 @@ def build_capital_live_image_payload(
         "latest_minute_snapshot_png": images[0] if images else None,
         "minute_snapshot_images": images,
     }
+
+
+def build_capital_live_curve_frame(*, run_root: str | Path) -> tuple[pd.DataFrame, str] | tuple[None, None]:
+    root = Path(run_root)
+    if not root.exists():
+        return None, None
+
+    preferred_paths = [
+        root / "path_equity_curve.live.csv",
+        root / "capital_minute_snapshots.live.csv",
+    ]
+    for csv_path in preferred_paths:
+        if not csv_path.exists():
+            continue
+        frame = pd.read_csv(csv_path)
+        curve_frame, axis_label = _build_curve_frame_from_live_rows(frame)
+        if curve_frame is not None and not curve_frame.empty:
+            return curve_frame, axis_label
+    return None, None
+
+
+def _build_curve_frame_from_live_rows(frame: pd.DataFrame) -> tuple[pd.DataFrame, str] | tuple[None, None]:
+    if frame.empty or "path_name" not in frame.columns or "capital" not in frame.columns:
+        return None, None
+
+    working = frame.copy()
+    if "session_step" in working.columns:
+        index_column = "session_step"
+        axis_label = "session step"
+    elif "tracking_time" in working.columns:
+        index_column = "tracking_time"
+        axis_label = "tracking time"
+    elif "timestamp" in working.columns:
+        # Backward-compatible fallback for older live runs that only stored repeated market timestamps.
+        working["session_step_fallback"] = working.groupby("path_name").cumcount() + 1
+        index_column = "session_step_fallback"
+        axis_label = "session step (reconstructed)"
+    elif "snapshot_time" in working.columns:
+        working["session_step_fallback"] = working.groupby("path_name").cumcount() + 1
+        index_column = "session_step_fallback"
+        axis_label = "session step (reconstructed)"
+    else:
+        return None, None
+
+    curve_frame = working.pivot(index=index_column, columns="path_name", values="capital")
+    if curve_frame.empty:
+        return None, None
+    return curve_frame.sort_index(), axis_label

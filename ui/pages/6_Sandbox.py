@@ -16,7 +16,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from event_engine.live_validation import choose_validation_providers
 from services.capital_replay_batch import run_capital_replay_batch_workbench
-from services.capital_tracking import build_capital_live_image_payload
+from services.capital_tracking import build_capital_live_curve_frame, build_capital_live_image_payload
 from services.capital_workbench import (
     run_capital_sandbox_compare_workbench,
     run_capital_sandbox_workbench,
@@ -395,23 +395,10 @@ def _render_live_snapshot_gallery(*, output_root: str | Path | None, title: str)
     if live_curve:
         st.image(str(live_curve), caption="Live equity curve", use_container_width=True)
 
-    snapshot_csv = Path(payload["run_root"]) / "capital_minute_snapshots.live.csv"
-    if snapshot_csv.exists():
-        live_snapshot_frame = pd.read_csv(snapshot_csv)
-        if not live_snapshot_frame.empty:
-            st.caption("Accumulated capital by session step")
-            if "session_step" in live_snapshot_frame.columns:
-                time_column = "session_step"
-            elif "tracking_time" in live_snapshot_frame.columns:
-                time_column = "tracking_time"
-            else:
-                time_column = "snapshot_time"
-            live_curve_frame = live_snapshot_frame.pivot(
-                index=time_column,
-                columns="path_name",
-                values="capital",
-            )
-            st.line_chart(live_curve_frame)
+    live_curve_frame, axis_label = build_capital_live_curve_frame(run_root=payload["run_root"])
+    if live_curve_frame is not None and not live_curve_frame.empty:
+        st.caption(f"Accumulated capital by {axis_label}")
+        st.line_chart(live_curve_frame, use_container_width=True)
 
     minute_images = payload.get("minute_snapshot_images") or []
     if minute_images:
@@ -563,7 +550,6 @@ with latest_col:
                 "overall_best_final_capital": latest_compare.get("overall_best_final_capital"),
             }
         )
-    _render_live_snapshot_gallery(output_root=None, title="Latest Live Snapshot Tracking")
 
 run_tab, batch_tab = st.tabs(["Single Run", "Replay Batch"])
 
@@ -672,3 +658,6 @@ with batch_tab:
             st.bar_chart(summary_frame.set_index("as_of_timestamp")["best_final_capital"])
         with st.expander("Replay Batch Report", expanded=False):
             st.markdown(batch_result["report_markdown"])
+
+st.divider()
+_render_live_snapshot_gallery(output_root=None, title="Latest Live Snapshot Tracking")
