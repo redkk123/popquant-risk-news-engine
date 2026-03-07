@@ -264,10 +264,19 @@ def _render_live_snapshot_gallery(*, output_root: str | Path | None, title: str)
         current_timestamp = latest_status.get("current_timestamp")
         providers_used = latest_status.get("providers_used", []) or []
         last_refresh_provider = session_meta.get("last_refresh_provider")
+        last_refresh_events = int(session_meta.get("last_refresh_events", 0) or 0)
+        last_refresh_inserted = int(session_meta.get("last_refresh_inserted", 0) or 0)
+        last_refresh_articles_seen = int(session_meta.get("last_refresh_articles_seen", 0) or 0)
+        last_refresh_status = session_meta.get("last_refresh_status") or "unknown"
         provider_label = ", ".join(str(value) for value in providers_used) or "none"
         refresh_label = last_refresh_provider or "none"
         st.caption(
             f"Active providers: bootstrap `{provider_label}` | latest refresh `{refresh_label}`"
+        )
+        st.caption(
+            f"Latest refresh status: `{last_refresh_status}` | "
+            f"events `{last_refresh_events}` | inserted `{last_refresh_inserted}` | "
+            f"articles_seen `{last_refresh_articles_seen}`"
         )
         if stale_steps > 0:
             st.warning(
