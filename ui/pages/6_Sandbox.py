@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -253,6 +254,28 @@ def _render_live_snapshot_gallery(*, output_root: str | Path | None, title: str)
 
     st.subheader(title)
     st.caption(f"Run: `{payload['run_root']}`")
+
+    status_path = Path(payload["run_root"]) / "live_session_status.json"
+    if status_path.exists():
+        with status_path.open("r", encoding="utf-8") as handle:
+            latest_status = json.load(handle)
+        session_meta = latest_status.get("session_meta", {}) or {}
+        stale_steps = int(session_meta.get("stale_price_steps", 0) or 0)
+        current_timestamp = latest_status.get("current_timestamp")
+        providers_used = latest_status.get("providers_used", []) or []
+        last_refresh_provider = session_meta.get("last_refresh_provider")
+        provider_label = ", ".join(str(value) for value in providers_used) or "none"
+        refresh_label = last_refresh_provider or "none"
+        st.caption(
+            f"Active providers: bootstrap `{provider_label}` | latest refresh `{refresh_label}`"
+        )
+        if stale_steps > 0:
+            st.warning(
+                f"Feed intraday parado: ultimo candle observado `{current_timestamp}` | "
+                f"stale_price_steps = `{stale_steps}`"
+            )
+        elif current_timestamp:
+            st.caption(f"Last observed candle: `{current_timestamp}`")
 
     live_curve = payload.get("live_equity_curve_png")
     if live_curve:
