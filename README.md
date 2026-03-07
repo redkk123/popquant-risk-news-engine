@@ -1030,6 +1030,7 @@ Recent UI additions:
 - local provider-token config in `config/local/provider_tokens.json` (git-ignored)
 - replay batch lab on `Capital Sandbox`
 - live PNG tracking and minute-snapshot gallery on `Capital Sandbox`
+- replay timestamp auto-aligns to `now - 24h` for `NewsAPI`, and to live current time for other providers
 
 ## Docs Site
 

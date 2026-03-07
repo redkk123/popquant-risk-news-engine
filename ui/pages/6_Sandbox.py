@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -28,6 +29,7 @@ from services.provider_tokens import (
     save_provider_tokens,
     temporary_provider_token_env,
 )
+from services.sandbox_time import build_replay_timestamp_defaults
 
 
 st.title("Capital Sandbox")
@@ -136,7 +138,43 @@ def _provider_strategy_preview(*, providers: list[str], mode: str, as_of_timesta
     return {
         "strategy": decision["strategy"],
         "providers": ", ".join(decision["providers"]),
+        "primary_provider": decision["providers"][0] if decision["providers"] else "",
     }
+
+
+def _render_replay_timer(*, timestamp_defaults: dict[str, object]) -> None:
+    current_timestamp = str(timestamp_defaults["current_timestamp"])
+    suggested_timestamp = str(timestamp_defaults["suggested_timestamp"])
+    mode_label = str(timestamp_defaults["auto_mode"])
+    components.html(
+        f"""
+        <div style="padding:0.8rem 1rem;border:1px solid #2b2b37;border-radius:0.6rem;background:#0f1116;color:#fafafa;">
+          <div style="font-size:0.95rem;font-weight:600;margin-bottom:0.5rem;">Timestamp Timer</div>
+          <div id="sandbox-clock-now" style="margin-bottom:0.25rem;"></div>
+          <div id="sandbox-clock-asof" style="margin-bottom:0.25rem;"></div>
+          <div style="opacity:0.75;font-size:0.85rem;">mode: {mode_label}</div>
+        </div>
+        <script>
+        const nowBase = new Date("{current_timestamp}");
+        const asOfBase = new Date("{suggested_timestamp}");
+        const mountedAt = Date.now();
+        const nowEl = document.getElementById("sandbox-clock-now");
+        const asOfEl = document.getElementById("sandbox-clock-asof");
+
+        function tick() {{
+          const elapsedMs = Date.now() - mountedAt;
+          const current = new Date(nowBase.getTime() + elapsedMs);
+          const asOf = new Date(asOfBase.getTime() + elapsedMs);
+          nowEl.textContent = "computer time: " + current.toLocaleString();
+          asOfEl.textContent = "replay as-of: " + asOf.toLocaleString();
+        }}
+
+        tick();
+        setInterval(tick, 1000);
+        </script>
+        """,
+        height=120,
+    )
 
 
 def _render_result(result: dict[str, object], *, title: str) -> None:
@@ -263,12 +301,6 @@ with config_col:
         key="sandbox_session_minutes",
     )
 
-    as_of_timestamp = st.text_input(
-        "Replay as-of timestamp",
-        value="2026-03-05T19:04:00-03:00",
-        disabled=(mode != "replay_as_of_timestamp"),
-        help="Used only in replay_as_of_timestamp mode.",
-    )
     news_refresh_minutes = st.number_input(
         "News refresh cadence (minutes)",
         min_value=1,
@@ -313,19 +345,49 @@ with config_col:
     start = start_end_cols[0].text_input("Historical start", value="2024-01-01")
     end = start_end_cols[1].text_input("Historical end", value="2026-03-06")
 
+    strategy_preview = {
+        "strategy": "fixture",
+        "providers": fixture_provider if fixture_mode else "",
+        "primary_provider": fixture_provider if fixture_mode else "",
+    }
     if fixture_mode:
         st.info("Fixture mode bypasses live providers and ignores token config.")
     else:
-        preview = _provider_strategy_preview(
+        strategy_preview = _provider_strategy_preview(
             providers=providers,
             mode=mode,
-            as_of_timestamp=as_of_timestamp,
+            as_of_timestamp=st.session_state.get("sandbox_as_of_timestamp", ""),
             end=end,
         )
         st.info(
-            f"Provider strategy preview: `{preview['strategy']}` | "
-            f"effective order: `{preview['providers'] or 'none'}`"
+            f"Provider strategy preview: `{strategy_preview['strategy']}` | "
+            f"effective order: `{strategy_preview['providers'] or 'none'}`"
         )
+
+    timestamp_defaults = build_replay_timestamp_defaults(
+        mode=mode,
+        fixture_mode=fixture_mode,
+        primary_provider=strategy_preview.get("primary_provider") or None,
+    )
+    timestamp_context = (
+        f"{mode}|{fixture_mode}|{timestamp_defaults['primary_provider']}|{timestamp_defaults['auto_mode']}"
+    )
+    if st.session_state.get("sandbox_as_of_context") != timestamp_context:
+        st.session_state["sandbox_as_of_timestamp"] = timestamp_defaults["suggested_timestamp"]
+        st.session_state["sandbox_as_of_context"] = timestamp_context
+
+    as_of_timestamp = st.text_input(
+        "Replay as-of timestamp",
+        key="sandbox_as_of_timestamp",
+        disabled=(mode != "replay_as_of_timestamp"),
+        help="NewsAPI uses current computer time minus 24h. Other providers stay on current computer time.",
+    )
+    if mode == "replay_as_of_timestamp":
+        if timestamp_defaults["is_newsapi_delayed"]:
+            st.caption("NewsAPI ativo: replay as-of alinhado em agora - 24h.")
+        else:
+            st.caption("Provider sem delay de 24h: replay as-of alinhado no horário atual do computador.")
+        _render_replay_timer(timestamp_defaults=timestamp_defaults)
 
 with latest_col:
     st.subheader("Latest Runs")
