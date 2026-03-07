@@ -204,11 +204,20 @@ def _render_live_countdown(*, status_payload: dict[str, object]) -> None:
     total_steps = int(status_payload.get("total_steps", 0) or 0)
     interval_seconds = int(status_payload.get("decision_interval_seconds", 60) or 60)
     total_seconds = max(0, total_steps * interval_seconds)
-    progress_value = 0.0 if total_steps <= 0 else min(max(step / total_steps, 0.0), 1.0)
+    current_interval = 0 if total_steps <= 0 else min(step + 1, total_steps)
+    remaining_intervals = 0 if total_steps <= 0 else max(total_steps - current_interval, 0)
+    progress_value = 0.0 if total_steps <= 0 else min(max(current_interval / total_steps, 0.0), 1.0)
     expected_end_at = status_payload.get("expected_end_at")
     session_started_at = status_payload.get("session_started_at")
 
-    st.progress(progress_value, text=f"Live progress: step {step}/{total_steps}")
+    st.progress(
+        progress_value,
+        text=(
+            f"Live progress: completed {step}/{total_steps} | "
+            f"current interval {current_interval}/{total_steps} | "
+            f"remaining intervals {remaining_intervals}"
+        ),
+    )
     if expected_end_at and session_started_at:
         countdown_payload = {
             "expected_end_at": str(expected_end_at),
