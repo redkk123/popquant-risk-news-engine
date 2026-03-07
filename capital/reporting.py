@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 from typing import Any
 
 import json
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -248,18 +251,32 @@ def write_capital_live_progress(
     journal_path = root / "decision_journal.live.csv"
     equity_path = root / "path_equity_curve.live.csv"
     snapshot_path = root / "capital_minute_snapshots.live.csv"
+    live_equity_png_path = root / "capital_sandbox_equity_curve.live.png"
+    minute_snapshot_image_dir = root / "minute_snapshot_images"
 
     with status_path.open("w", encoding="utf-8") as handle:
         json.dump(status_payload, handle, indent=2, default=str)
     journal_frame.to_csv(journal_path, index=False)
     equity_frame.to_csv(equity_path, index=False)
     snapshot_frame.to_csv(snapshot_path, index=False)
+    _write_equity_curve_png(
+        snapshot_frame=snapshot_frame,
+        output_path=live_equity_png_path,
+        title="Capital Sandbox Live Equity Curve",
+    )
+    archived_snapshot_png = _write_live_snapshot_archive_png(
+        snapshot_frame=snapshot_frame,
+        output_dir=minute_snapshot_image_dir,
+    )
 
     return {
         "status_json": status_path,
         "journal_csv": journal_path,
         "equity_curve_csv": equity_path,
         "minute_snapshots_csv": snapshot_path,
+        "live_equity_curve_png": live_equity_png_path,
+        "latest_minute_snapshot_png": archived_snapshot_png,
+        "minute_snapshot_image_dir": minute_snapshot_image_dir,
     }
 
 
@@ -333,3 +350,38 @@ def _write_summary_bar_png(
     plt.tight_layout()
     plt.savefig(output, dpi=140)
     plt.close()
+
+
+def _write_live_snapshot_archive_png(
+    *,
+    snapshot_frame: pd.DataFrame,
+    output_dir: str | Path,
+) -> Path | None:
+    if snapshot_frame.empty:
+        return None
+
+    frame = snapshot_frame.copy()
+    frame["snapshot_time"] = pd.to_datetime(frame["snapshot_time"], utc=True, errors="coerce")
+    frame = frame.dropna(subset=["snapshot_time"])
+    if frame.empty:
+        return None
+
+    latest_snapshot_time = frame["snapshot_time"].max()
+    latest_rows = frame.loc[frame["snapshot_time"] == latest_snapshot_time].copy()
+    if latest_rows.empty:
+        return None
+
+    image_dir = Path(output_dir)
+    image_dir.mkdir(parents=True, exist_ok=True)
+    snapshot_label = _sanitize_snapshot_label(str(latest_snapshot_time.isoformat()))
+    output_path = image_dir / f"{len(frame['snapshot_time'].drop_duplicates()):04d}_{snapshot_label}.png"
+    _write_equity_curve_png(
+        snapshot_frame=frame,
+        output_path=output_path,
+        title=f"Capital Sandbox Live Snapshot {latest_snapshot_time.isoformat()}",
+    )
+    return output_path
+
+
+def _sanitize_snapshot_label(value: str) -> str:
+    return re.sub(r"[^0-9A-Za-z_-]+", "_", value).strip("_")

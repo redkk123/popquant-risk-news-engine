@@ -728,6 +728,8 @@ The live mode now:
 - refreshes the news layer during the session
 - only enters risk when an eligible event is also confirmed by the quant gate
 - writes `live_session_status.json` with refresh counts, stale-price steps, and the current best path
+- writes `capital_sandbox_equity_curve.live.png` on every live update
+- archives minute-by-minute PNG snapshots under `minute_snapshot_images/`
 
 Launch `5m`, `15m`, and `30m` real-time sessions in parallel:
 
