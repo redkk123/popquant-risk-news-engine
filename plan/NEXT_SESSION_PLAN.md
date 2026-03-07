@@ -9,7 +9,8 @@ What remains is mostly:
 1. validation evidence
 2. final promotion decisions
 3. a few last sandbox UX improvements
-4. one environment issue outside the app itself
+4. one last sandbox instrumentation gap
+5. one environment issue outside the app itself
 
 ## What Still Matters Most
 
@@ -51,6 +52,35 @@ What is still missing:
 
 This is validation, not missing architecture.
 
+### 4. Immediate sandbox instrumentation gap
+
+#### Explicit useless-news breakdown in the sandbox UI
+
+Current truth:
+
+- the UI already shows:
+  - `articles_seen`
+  - `inserted`
+  - `events`
+  - provider and refresh status
+- but it still does **not** explicitly tell whether the news was:
+  - weak
+  - filtered
+  - commentary
+  - recap
+  - non-eligible
+  - actually usable
+
+So next session should add a sandbox news-quality block with:
+
+1. `articles_seen`
+2. `inserted`
+3. `events_processed`
+4. `watchlist_eligible`
+5. `filtered_low_quality`
+6. `filtered_commentary_or_recap`
+7. `usable_signal = yes/no`
+
 ## Sandbox UX Items Still Worth Doing
 
 These are smaller than the evidence gap, but still useful:
@@ -68,6 +98,8 @@ These are smaller than the evidence gap, but still useful:
 4. optionally show:
    - `last refresh at`
    - `next expected step`
+5. de-overlap identical capital lines or show a current-value table beside the chart
+6. keep the current run visible without loading stale historical runs by accident
 
 ## Environment Issue Still Open
 
@@ -86,6 +118,12 @@ This is not a sandbox bug.
 
 ### First
 
+Add the missing sandbox news-quality breakdown:
+
+1. explicit useless-news / filtered-news breakdown
+
+### Second
+
 Run fresh evidence again when providers allow:
 
 1. `live_validation_suite`
@@ -94,7 +132,7 @@ Run fresh evidence again when providers allow:
    - BTC 24/7
    - core equities during active market hours
 
-### Second
+### Third
 
 If fresh evidence is still weak:
 
@@ -102,7 +140,7 @@ If fresh evidence is still weak:
 2. use `newsapi` delayed windows to strengthen controlled evidence
 3. keep `alphavantage` for fresher windows only
 
-### Third
+### Fourth
 
 Only after enough fresh evidence:
 
@@ -112,13 +150,14 @@ Only after enough fresh evidence:
 ## Practical Checklist For The Next Session
 
 1. restart Streamlit clean
-2. verify the latest sandbox UI behavior on a fresh run
-3. run a fresh validation window if provider quota allows
-4. run one fresh `selected vs guarded` probe compare
-5. run one BTC live sandbox session
-6. if the market is open, run one equities live sandbox session
-7. save the evidence paths
-8. only then revisit final guarded promotion
+2. add explicit useless-news / filtered-news breakdown in the sandbox UI
+3. verify the latest sandbox UI behavior on a fresh run
+4. run a fresh validation window if provider quota allows
+5. run one fresh `selected vs guarded` probe compare
+6. run one BTC live sandbox session
+7. if the market is open, run one equities live sandbox session
+8. save the evidence paths
+9. only then revisit final guarded promotion
 
 ## Summary
 
@@ -127,5 +166,6 @@ What still matters:
 1. more fresh evidence
 2. final guarded promotion decision
 3. more live sandbox sessions with useful signal
-4. minor live-tracking UX polish
-5. optional Windows/SciPy environment cleanup
+4. make useless-news / filtered-news explicit in the sandbox UI
+5. minor live-tracking UX polish
+6. optional Windows/SciPy environment cleanup
