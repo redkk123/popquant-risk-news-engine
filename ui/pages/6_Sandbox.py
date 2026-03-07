@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sys
+import threading
 from pathlib import Path
 
 import pandas as pd
@@ -179,6 +180,73 @@ def _render_replay_timer(*, timestamp_defaults: dict[str, object]) -> None:
     )
 
 
+def _render_live_countdown(*, status_payload: dict[str, object]) -> None:
+    step = int(status_payload.get("step", 0) or 0)
+    total_steps = int(status_payload.get("total_steps", 0) or 0)
+    interval_seconds = int(status_payload.get("decision_interval_seconds", 60) or 60)
+    remaining_seconds = max(0, (total_steps - step) * interval_seconds)
+    total_seconds = max(0, total_steps * interval_seconds)
+    progress_value = 0.0 if total_steps <= 0 else min(max(step / total_steps, 0.0), 1.0)
+
+    st.progress(progress_value, text=f"Live progress: step {step}/{total_steps}")
+    components.html(
+        f"""
+        <div style="padding:0.8rem 1rem;border:1px solid #2b2b37;border-radius:0.6rem;background:#0f1116;color:#fafafa;">
+          <div style="font-size:0.95rem;font-weight:600;margin-bottom:0.5rem;">Session Countdown</div>
+          <div id="sandbox-countdown-remaining" style="font-size:1.1rem;margin-bottom:0.25rem;"></div>
+          <div id="sandbox-countdown-total" style="opacity:0.75;font-size:0.85rem;"></div>
+        </div>
+        <script>
+        const mountedAt = Date.now();
+        const initialRemaining = {remaining_seconds};
+        const totalSeconds = {total_seconds};
+        const remainingEl = document.getElementById("sandbox-countdown-remaining");
+        const totalEl = document.getElementById("sandbox-countdown-total");
+
+        function formatSeconds(raw) {{
+          const value = Math.max(0, Math.floor(raw));
+          const minutes = Math.floor(value / 60);
+          const seconds = value % 60;
+          return minutes.toString().padStart(2, "0") + ":" + seconds.toString().padStart(2, "0");
+        }}
+
+        function tick() {{
+          const elapsed = Math.floor((Date.now() - mountedAt) / 1000);
+          const remaining = Math.max(0, initialRemaining - elapsed);
+          remainingEl.textContent = "remaining: " + formatSeconds(remaining);
+          totalEl.textContent = "total session: " + formatSeconds(totalSeconds);
+        }}
+
+        tick();
+        setInterval(tick, 1000);
+        </script>
+        """,
+        height=110,
+    )
+
+
+def _enable_auto_refresh_if_running(*, status_payload: dict[str, object] | None) -> None:
+    if not status_payload:
+        return
+    if status_payload.get("status") not in {"running", "completing"}:
+        return
+    components.html(
+        """
+        <script>
+        setTimeout(function() {
+          window.parent.location.reload();
+        }, 5000);
+        </script>
+        """,
+        height=0,
+    )
+
+
+def _run_live_sandbox_in_background(**kwargs) -> None:
+    with temporary_provider_token_env(kwargs.pop("token_inputs")):
+        run_capital_sandbox_workbench(**kwargs)
+
+
 def _render_result(result: dict[str, object], *, title: str) -> None:
     st.subheader(title)
     summary_frame = result["summary_frame"]
@@ -290,13 +358,14 @@ def _render_live_snapshot_gallery(*, output_root: str | Path | None, title: str)
     st.caption(f"Run: `{payload['run_root']}`")
 
     status_path = Path(payload["run_root"]) / "live_session_status.json"
+    status_payload: dict[str, object] | None = None
     if status_path.exists():
         with status_path.open("r", encoding="utf-8") as handle:
-            latest_status = json.load(handle)
-        session_meta = latest_status.get("session_meta", {}) or {}
+            status_payload = json.load(handle)
+        session_meta = status_payload.get("session_meta", {}) or {}
         stale_steps = int(session_meta.get("stale_price_steps", 0) or 0)
-        current_timestamp = latest_status.get("current_timestamp")
-        providers_used = latest_status.get("providers_used", []) or []
+        current_timestamp = status_payload.get("current_timestamp")
+        providers_used = status_payload.get("providers_used", []) or []
         last_refresh_provider = session_meta.get("last_refresh_provider")
         last_refresh_events = int(session_meta.get("last_refresh_events", 0) or 0)
         last_refresh_inserted = int(session_meta.get("last_refresh_inserted", 0) or 0)
@@ -312,6 +381,7 @@ def _render_live_snapshot_gallery(*, output_root: str | Path | None, title: str)
             f"events `{last_refresh_events}` | inserted `{last_refresh_inserted}` | "
             f"articles_seen `{last_refresh_articles_seen}`"
         )
+        _render_live_countdown(status_payload=status_payload)
         if stale_steps > 0:
             st.warning(
                 f"Feed intraday parado: ultimo candle observado `{current_timestamp}` | "
@@ -319,10 +389,29 @@ def _render_live_snapshot_gallery(*, output_root: str | Path | None, title: str)
             )
         elif current_timestamp:
             st.caption(f"Last observed candle: `{current_timestamp}`")
+        _enable_auto_refresh_if_running(status_payload=status_payload)
 
     live_curve = payload.get("live_equity_curve_png")
     if live_curve:
         st.image(str(live_curve), caption="Live equity curve", use_container_width=True)
+
+    snapshot_csv = Path(payload["run_root"]) / "capital_minute_snapshots.live.csv"
+    if snapshot_csv.exists():
+        live_snapshot_frame = pd.read_csv(snapshot_csv)
+        if not live_snapshot_frame.empty:
+            st.caption("Accumulated capital by session step")
+            if "session_step" in live_snapshot_frame.columns:
+                time_column = "session_step"
+            elif "tracking_time" in live_snapshot_frame.columns:
+                time_column = "tracking_time"
+            else:
+                time_column = "snapshot_time"
+            live_curve_frame = live_snapshot_frame.pivot(
+                index=time_column,
+                columns="path_name",
+                values="capital",
+            )
+            st.line_chart(live_curve_frame)
 
     minute_images = payload.get("minute_snapshot_images") or []
     if minute_images:
@@ -480,39 +569,64 @@ run_tab, batch_tab = st.tabs(["Single Run", "Replay Batch"])
 
 with run_tab:
     if st.button("Run Capital Sandbox", disabled=not bool(portfolio_options), use_container_width=True):
-        with temporary_provider_token_env(token_inputs):
-            if compare_sessions:
-                result = run_capital_sandbox_compare_workbench(
-                    portfolio_config=portfolio_path,
-                    mode=mode,
-                    initial_capital=float(initial_capital),
-                    decision_interval_seconds=int(decision_interval_seconds),
-                    session_minutes_list=compare_sessions,
-                    start=start,
-                    end=end,
-                    news_fixture=fixture_path if fixture_mode else None,
-                    fixture_provider=fixture_provider,
-                    providers=providers,
-                    as_of_timestamp=as_of_timestamp if mode == "replay_as_of_timestamp" else None,
-                    output_dir=PROJECT_ROOT / "output" / "capital_sandbox",
-                )
-            else:
-                result = run_capital_sandbox_workbench(
-                    portfolio_config=portfolio_path,
-                    mode=mode,
-                    initial_capital=float(initial_capital),
-                    decision_interval_seconds=int(decision_interval_seconds),
-                    session_minutes=int(session_minutes),
-                    news_refresh_minutes=int(news_refresh_minutes),
-                    start=start,
-                    end=end,
-                    news_fixture=fixture_path if fixture_mode else None,
-                    fixture_provider=fixture_provider,
-                    providers=providers,
-                    as_of_timestamp=as_of_timestamp if mode == "replay_as_of_timestamp" else None,
-                    output_dir=PROJECT_ROOT / "output" / "capital_sandbox",
-                )
-        _render_result(result, title="Capital Sandbox Result")
+        if mode == "live_session_real_time" and not compare_sessions:
+            thread = threading.Thread(
+                target=_run_live_sandbox_in_background,
+                kwargs={
+                    "token_inputs": dict(token_inputs),
+                    "portfolio_config": portfolio_path,
+                    "mode": mode,
+                    "initial_capital": float(initial_capital),
+                    "decision_interval_seconds": int(decision_interval_seconds),
+                    "session_minutes": int(session_minutes),
+                    "news_refresh_minutes": int(news_refresh_minutes),
+                    "start": start,
+                    "end": end,
+                    "news_fixture": fixture_path if fixture_mode else None,
+                    "fixture_provider": fixture_provider,
+                    "providers": providers,
+                    "as_of_timestamp": as_of_timestamp if mode == "replay_as_of_timestamp" else None,
+                    "output_dir": PROJECT_ROOT / "output" / "capital_sandbox",
+                },
+                daemon=True,
+            )
+            thread.start()
+            st.success("Live sandbox started in background. The page will auto-refresh while the session is running.")
+            st.rerun()
+        else:
+            with temporary_provider_token_env(token_inputs):
+                if compare_sessions:
+                    result = run_capital_sandbox_compare_workbench(
+                        portfolio_config=portfolio_path,
+                        mode=mode,
+                        initial_capital=float(initial_capital),
+                        decision_interval_seconds=int(decision_interval_seconds),
+                        session_minutes_list=compare_sessions,
+                        start=start,
+                        end=end,
+                        news_fixture=fixture_path if fixture_mode else None,
+                        fixture_provider=fixture_provider,
+                        providers=providers,
+                        as_of_timestamp=as_of_timestamp if mode == "replay_as_of_timestamp" else None,
+                        output_dir=PROJECT_ROOT / "output" / "capital_sandbox",
+                    )
+                else:
+                    result = run_capital_sandbox_workbench(
+                        portfolio_config=portfolio_path,
+                        mode=mode,
+                        initial_capital=float(initial_capital),
+                        decision_interval_seconds=int(decision_interval_seconds),
+                        session_minutes=int(session_minutes),
+                        news_refresh_minutes=int(news_refresh_minutes),
+                        start=start,
+                        end=end,
+                        news_fixture=fixture_path if fixture_mode else None,
+                        fixture_provider=fixture_provider,
+                        providers=providers,
+                        as_of_timestamp=as_of_timestamp if mode == "replay_as_of_timestamp" else None,
+                        output_dir=PROJECT_ROOT / "output" / "capital_sandbox",
+                    )
+            _render_result(result, title="Capital Sandbox Result")
 
 with batch_tab:
     st.caption("Best used for delayed/time-shifted testing with multiple `as_of` timestamps.")

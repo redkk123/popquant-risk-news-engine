@@ -1033,6 +1033,7 @@ Recent UI additions:
 - replay timestamp auto-aligns to `now - 24h` for `NewsAPI`, and to live current time for other providers
 - live snapshots accumulate by session step even when the market timestamp is stale
 - `Capital Sandbox` exposes a quant/risk panel from the decision journal
+- live runs start in background from the UI, with auto-refresh and a session countdown
 
 ## Docs Site
 
