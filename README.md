@@ -1026,6 +1026,33 @@ Recent UI additions:
 - path leaderboard and capital-run tables on `Ops`
 - weight-sum preview on `Portfolios`
 
+## Docs Site
+
+This repo now includes a MkDocs site for GitHub Pages.
+
+Local serve:
+
+```bash
+pip install -r requirements-docs.txt
+mkdocs serve
+```
+
+Local build:
+
+```bash
+mkdocs build --strict
+```
+
+Main config:
+
+- `mkdocs.yml`
+- `docs/index.md`
+- `.github/workflows/docs.yml`
+
+For GitHub Pages deployment, set:
+
+- `Settings -> Pages -> Build and deployment -> Source = GitHub Actions`
+
 ## Next Step
 
 The core MVP, operator layer, grouped research backtests, versioned calibration registry, local UI, and real-time capital sandbox are in place.

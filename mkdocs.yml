@@ -1,0 +1,49 @@
+site_name: PopQuant Risk + News Engine
+site_description: Portfolio risk engine plus deterministic news-event analysis, fusion backtests, and capital sandbox documentation.
+site_url: https://redkk123.github.io/popquant-risk-news-engine/
+repo_url: https://github.com/redkk123/popquant-risk-news-engine
+repo_name: redkk123/popquant-risk-news-engine
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.sections
+    - navigation.instant
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - Home: index.md
+  - Results:
+      - Results Overview: results.md
+      - Showcase Walkthrough: showcase_walkthrough.md
+  - System:
+      - Architecture: architecture.md
+      - Data Flow: data_flow.md
+      - Quant Risk: quant_risk.md
+      - Risk V2: risk_v2.md
+      - Event Engine: event_engine.md
+      - Fusion: fusion.md
+  - Research:
+      - Backtest Research: backtest_research.md
+      - Calibration Registry: calibration_registry.md
+      - Ops Validation: ops_validation.md
+  - Usage:
+      - Local UI: local_ui.md
+      - Reading Order: reading_order.md
+      - GitHub Publish: github_publish.md

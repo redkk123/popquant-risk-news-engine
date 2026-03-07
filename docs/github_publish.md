@@ -13,6 +13,7 @@ Current note:
 - stable configs under `config/`
 - small fixture data under `datasets/fixtures/` and `datasets/labeled_events/`
 - study docs under `docs/`
+- MkDocs site config under `mkdocs.yml` and `.github/workflows/docs.yml`
 - one lightweight showcase graphic such as `output/figures/week1_baseline.png`
 
 ## Exclude
@@ -36,14 +37,15 @@ If you include generated outputs, prefer short markdown reports and small PNGs o
 
 1. Run `python -m pytest tests -q`
 2. Open the Streamlit UI once with `streamlit run ui/app.py`
-3. Confirm no secret values appear in:
+3. Run `mkdocs build --strict`
+4. Confirm no secret values appear in:
    - `output/**/run_log.jsonl`
    - `output/**/failure_manifest.json`
    - checked-in fixtures
-4. Confirm README commands still match the current scripts
-5. Confirm the roadmap file points to the right canonical source:
+5. Confirm README commands still match the current scripts
+6. Confirm the roadmap file points to the right canonical source:
    - `plan/master_execution_plan.md`
-6. Confirm showcase artifacts are lightweight and still representative
+7. Confirm showcase artifacts are lightweight and still representative
 
 ## Suggested Reading Order
 
@@ -55,3 +57,11 @@ If you include generated outputs, prefer short markdown reports and small PNGs o
 6. `docs/fusion.md`
 7. `docs/ops_validation.md`
 8. `docs/local_ui.md`
+
+## GitHub Pages
+
+If you want the docs site live:
+
+1. keep `mkdocs.yml`, `docs/`, and `.github/workflows/docs.yml` in the repo
+2. in repository settings, set:
+   - `Pages -> Build and deployment -> Source = GitHub Actions`

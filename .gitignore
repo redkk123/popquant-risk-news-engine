@@ -14,3 +14,4 @@ output/figures/*
 !output/figures/week1_baseline.png
 
 *.log
+site/
