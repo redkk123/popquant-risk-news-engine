@@ -146,6 +146,7 @@ def _render_replay_timer(*, timestamp_defaults: dict[str, object]) -> None:
     current_timestamp = str(timestamp_defaults["current_timestamp"])
     suggested_timestamp = str(timestamp_defaults["suggested_timestamp"])
     mode_label = str(timestamp_defaults["auto_mode"])
+    reference_label = "replay as-of" if mode_label == "newsapi_delayed_24h" else "live/reference time"
     components.html(
         f"""
         <div style="padding:0.8rem 1rem;border:1px solid #2b2b37;border-radius:0.6rem;background:#0f1116;color:#fafafa;">
@@ -166,7 +167,7 @@ def _render_replay_timer(*, timestamp_defaults: dict[str, object]) -> None:
           const current = new Date(nowBase.getTime() + elapsedMs);
           const asOf = new Date(asOfBase.getTime() + elapsedMs);
           nowEl.textContent = "computer time: " + current.toLocaleString();
-          asOfEl.textContent = "replay as-of: " + asOf.toLocaleString();
+          asOfEl.textContent = "{reference_label}: " + asOf.toLocaleString();
         }}
 
         tick();
@@ -382,12 +383,13 @@ with config_col:
         disabled=(mode != "replay_as_of_timestamp"),
         help="NewsAPI uses current computer time minus 24h. Other providers stay on current computer time.",
     )
-    if mode == "replay_as_of_timestamp":
-        if timestamp_defaults["is_newsapi_delayed"]:
-            st.caption("NewsAPI ativo: replay as-of alinhado em agora - 24h.")
-        else:
-            st.caption("Provider sem delay de 24h: replay as-of alinhado no horário atual do computador.")
-        _render_replay_timer(timestamp_defaults=timestamp_defaults)
+    if timestamp_defaults["is_newsapi_delayed"]:
+        st.caption("NewsAPI ativo: replay as-of alinhado em agora - 24h.")
+    elif mode == "replay_as_of_timestamp":
+        st.caption("Provider sem delay de 24h: replay as-of alinhado no horário atual do computador.")
+    else:
+        st.caption("Modo live/replay comum: a referência fica no horário atual do computador.")
+    _render_replay_timer(timestamp_defaults=timestamp_defaults)
 
 with latest_col:
     st.subheader("Latest Runs")
