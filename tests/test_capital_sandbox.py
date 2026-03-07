@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from capital.sandbox import run_capital_sandbox, run_capital_sandbox_live_session
+from capital.sandbox import build_snapshot_frame, run_capital_sandbox, run_capital_sandbox_live_session
 
 
 def test_run_capital_sandbox_generates_summary_and_journal() -> None:
@@ -351,3 +351,33 @@ def test_run_capital_sandbox_live_session_skips_refresh_after_quota_error() -> N
     assert session_meta["news_refresh_errors"] == 1
     assert session_meta["news_refresh_skipped_quota_cooldown"] == 1
     assert "quota_cooldown_skip" in set(journal["refresh_status"])
+
+
+def test_build_snapshot_frame_preserves_live_progress_when_market_timestamp_repeats() -> None:
+    equity = pd.DataFrame(
+        [
+            {
+                "timestamp": "2026-03-06T20:59:00Z",
+                "capture_timestamp": "2026-03-06T23:10:00Z",
+                "session_step": 1,
+                "path_name": "cash_only",
+                "capital": 100.0,
+            },
+            {
+                "timestamp": "2026-03-06T20:59:00Z",
+                "capture_timestamp": "2026-03-06T23:11:00Z",
+                "session_step": 2,
+                "path_name": "cash_only",
+                "capital": 100.0,
+            },
+        ]
+    )
+
+    snapshot = build_snapshot_frame(equity, frequency="1min")
+
+    assert len(snapshot) == 2
+    assert snapshot["session_step"].tolist() == [1, 2]
+    assert snapshot["tracking_time"].astype(str).tolist() == [
+        "2026-03-06 23:10:00+00:00",
+        "2026-03-06 23:11:00+00:00",
+    ]

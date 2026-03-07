@@ -353,9 +353,28 @@ def build_snapshot_frame(equity_frame: pd.DataFrame, *, frequency: str = "1min")
         return pd.DataFrame(columns=["snapshot_time", "path_name", "capital"])
     working = equity_frame.copy()
     working["timestamp"] = pd.to_datetime(working["timestamp"], utc=True, errors="coerce")
+    if "capture_timestamp" in working.columns:
+        working["capture_timestamp"] = pd.to_datetime(working["capture_timestamp"], utc=True, errors="coerce")
     working = working.dropna(subset=["timestamp"])
     if working.empty:
         return pd.DataFrame(columns=["snapshot_time", "path_name", "capital"])
+
+    if "session_step" in working.columns:
+        rows: list[dict[str, Any]] = []
+        for path_name, path_frame in working.groupby("path_name"):
+            ordered = path_frame.sort_values(["session_step", "timestamp"]).copy()
+            latest_per_step = ordered.groupby("session_step", as_index=False).last()
+            rows.extend(
+                {
+                    "snapshot_time": row["timestamp"],
+                    "tracking_time": row["capture_timestamp"] if "capture_timestamp" in latest_per_step.columns else row["timestamp"],
+                    "session_step": int(row["session_step"]),
+                    "path_name": path_name,
+                    "capital": float(row["capital"]),
+                }
+                for _, row in latest_per_step.iterrows()
+            )
+        return pd.DataFrame(rows).sort_values(["session_step", "path_name"]).reset_index(drop=True)
 
     rows: list[dict[str, Any]] = []
     for path_name, path_frame in working.groupby("path_name"):
@@ -364,6 +383,7 @@ def build_snapshot_frame(equity_frame: pd.DataFrame, *, frequency: str = "1min")
         rows.extend(
             {
                 "snapshot_time": timestamp,
+                "tracking_time": timestamp,
                 "path_name": path_name,
                 "capital": float(value),
             }
@@ -843,9 +863,17 @@ def run_capital_sandbox(
         sector_state.exposure = float(sector_target)
         sector_state.basket_weights = sector_target_weights
 
+        session_step = int(len(journal_rows) + 1)
+        capture_timestamp = pd.Timestamp.now(tz="UTC")
         equity_rows.extend(
             [
-                {"timestamp": timestamp, "path_name": name, "capital": state.capital}
+                {
+                    "timestamp": timestamp,
+                    "capture_timestamp": capture_timestamp,
+                    "session_step": session_step,
+                    "path_name": name,
+                    "capital": state.capital,
+                }
                 for name, state in path_states.items()
             ]
         )
@@ -853,6 +881,8 @@ def run_capital_sandbox(
         journal_rows.append(
             {
                 "timestamp": timestamp,
+                "capture_timestamp": capture_timestamp,
+                "session_step": session_step,
                 "path_name": "event_quant_pathing",
                 "portfolio_return": float(portfolio_return),
                 "benchmark_return": float(benchmark_return),
@@ -1318,9 +1348,16 @@ def run_capital_sandbox_live_session(
         sector_state.exposure = float(sector_target)
         sector_state.basket_weights = sector_target_weights
 
+        capture_timestamp = pd.Timestamp.now(tz="UTC")
         equity_rows.extend(
             [
-                {"timestamp": current_timestamp, "path_name": name, "capital": state.capital}
+                {
+                    "timestamp": current_timestamp,
+                    "capture_timestamp": capture_timestamp,
+                    "session_step": int(step),
+                    "path_name": name,
+                    "capital": state.capital,
+                }
                 for name, state in path_states.items()
             ]
         )
@@ -1328,6 +1365,8 @@ def run_capital_sandbox_live_session(
         journal_rows.append(
             {
                 "timestamp": current_timestamp,
+                "capture_timestamp": capture_timestamp,
+                "session_step": int(step),
                 "path_name": "event_quant_pathing",
                 "portfolio_return": float(portfolio_return),
                 "benchmark_return": float(benchmark_return),

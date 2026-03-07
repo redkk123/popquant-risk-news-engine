@@ -222,14 +222,48 @@ def _render_result(result: dict[str, object], *, title: str) -> None:
             if "session_label" in snapshot_frame.columns
             else snapshot_frame.copy()
         )
-        selected["snapshot_time"] = selected["snapshot_time"].astype(str)
-        curve_frame = selected.pivot(index="snapshot_time", columns="path_name", values="capital")
+        time_column = "tracking_time" if "tracking_time" in selected.columns else "snapshot_time"
+        selected[time_column] = selected[time_column].astype(str)
+        curve_frame = selected.pivot(index=time_column, columns="path_name", values="capital")
         st.line_chart(curve_frame)
         with st.expander("Snapshot Table", expanded=False):
             st.dataframe(selected, use_container_width=True, hide_index=True)
 
     journal_frame = result.get("journal_frame")
     if isinstance(journal_frame, pd.DataFrame) and not journal_frame.empty:
+        st.subheader("Quant / Risk Engine")
+        quant_columns = [
+            column
+            for column in [
+                "session_step",
+                "timestamp",
+                "regime",
+                "signal_score",
+                "quant_confirmation",
+                "confirmation_score",
+                "path_confirmation",
+                "path_confirmation_score",
+                "eligible_event_count",
+                "positive_events",
+                "negative_events",
+                "momentum_signal",
+                "benchmark_momentum",
+                "ewma_ratio",
+                "risk_on_allowed",
+                "price_timestamp_advanced",
+                "refresh_status",
+            ]
+            if column in journal_frame.columns
+        ]
+        quant_tail = journal_frame.loc[:, quant_columns].tail(20).copy()
+        st.dataframe(quant_tail, use_container_width=True, hide_index=True)
+        if {"session_step", "signal_score", "confirmation_score"}.issubset(journal_frame.columns):
+            signal_chart = journal_frame.loc[
+                :,
+                ["session_step", "signal_score", "confirmation_score"],
+            ].copy()
+            signal_chart = signal_chart.drop_duplicates(subset=["session_step"]).set_index("session_step")
+            st.line_chart(signal_chart)
         with st.expander("Decision Journal", expanded=False):
             st.dataframe(journal_frame.tail(50), use_container_width=True, hide_index=True)
 

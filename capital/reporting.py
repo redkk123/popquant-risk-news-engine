@@ -294,7 +294,10 @@ def _write_equity_curve_png(
 
     frame = snapshot_frame.copy()
     frame["snapshot_time"] = pd.to_datetime(frame["snapshot_time"], utc=True, errors="coerce")
-    frame = frame.dropna(subset=["snapshot_time"])
+    if "tracking_time" in frame.columns:
+        frame["tracking_time"] = pd.to_datetime(frame["tracking_time"], utc=True, errors="coerce")
+    time_column = "tracking_time" if "tracking_time" in frame.columns and frame["tracking_time"].notna().any() else "snapshot_time"
+    frame = frame.dropna(subset=[time_column])
     if frame.empty:
         return
 
@@ -304,7 +307,7 @@ def _write_equity_curve_png(
         label_column = "series_label"
 
     pivot = frame.pivot_table(
-        index="snapshot_time",
+        index=time_column,
         columns=label_column,
         values="capital",
         aggfunc="last",
@@ -378,19 +381,22 @@ def _write_live_snapshot_archive_png(
 
     frame = snapshot_frame.copy()
     frame["snapshot_time"] = pd.to_datetime(frame["snapshot_time"], utc=True, errors="coerce")
-    frame = frame.dropna(subset=["snapshot_time"])
+    if "tracking_time" in frame.columns:
+        frame["tracking_time"] = pd.to_datetime(frame["tracking_time"], utc=True, errors="coerce")
+    time_column = "tracking_time" if "tracking_time" in frame.columns and frame["tracking_time"].notna().any() else "snapshot_time"
+    frame = frame.dropna(subset=[time_column])
     if frame.empty:
         return None
 
-    latest_snapshot_time = frame["snapshot_time"].max()
-    latest_rows = frame.loc[frame["snapshot_time"] == latest_snapshot_time].copy()
+    latest_snapshot_time = frame[time_column].max()
+    latest_rows = frame.loc[frame[time_column] == latest_snapshot_time].copy()
     if latest_rows.empty:
         return None
 
     image_dir = Path(output_dir)
     image_dir.mkdir(parents=True, exist_ok=True)
     snapshot_label = _sanitize_snapshot_label(str(latest_snapshot_time.isoformat()))
-    output_path = image_dir / f"{len(frame['snapshot_time'].drop_duplicates()):04d}_{snapshot_label}.png"
+    output_path = image_dir / f"{len(frame[time_column].drop_duplicates()):04d}_{snapshot_label}.png"
     _write_equity_curve_png(
         snapshot_frame=frame,
         output_path=output_path,

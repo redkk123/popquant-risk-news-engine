@@ -1031,6 +1031,8 @@ Recent UI additions:
 - replay batch lab on `Capital Sandbox`
 - live PNG tracking and minute-snapshot gallery on `Capital Sandbox`
 - replay timestamp auto-aligns to `now - 24h` for `NewsAPI`, and to live current time for other providers
+- live snapshots accumulate by session step even when the market timestamp is stale
+- `Capital Sandbox` exposes a quant/risk panel from the decision journal
 
 ## Docs Site
 
