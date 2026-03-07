@@ -6,6 +6,9 @@ from typing import Any
 import pandas as pd
 
 from capital.reporting import (
+    LIVE_EQUITY_COLUMNS,
+    LIVE_JOURNAL_COLUMNS,
+    LIVE_SNAPSHOT_COLUMNS,
     build_capital_compare_report,
     build_capital_sandbox_report,
     write_capital_live_progress,
@@ -27,6 +30,77 @@ from event_engine.storage.repository import NewsRepository
 from fusion.scenario_mapper import load_event_mapping_config
 from fusion.sector_mapping import load_ticker_sector_map
 from services.pathing import PROJECT_ROOT
+from services.portfolio_manager import load_portfolio_payload
+
+
+def initialize_capital_live_run(
+    *,
+    portfolio_config: str | Path,
+    session_minutes: int,
+    decision_interval_seconds: int,
+    output_dir: str | Path | None = None,
+    run_id_override: str | None = None,
+    providers: list[str] | tuple[str, ...] = (),
+) -> dict[str, Any]:
+    payload = load_portfolio_payload(portfolio_config)
+    portfolio_id = str(payload["portfolio_id"])
+    run_id = run_id_override or f"{pd.Timestamp.now(tz='UTC').strftime('%Y%m%dT%H%M%S%fZ')}_{portfolio_id}"
+    output_root = Path(output_dir or (PROJECT_ROOT / "output" / "capital_sandbox")) / run_id
+    session_started_at = pd.Timestamp.now(tz="UTC")
+    effective_interval_seconds = max(60, int(decision_interval_seconds))
+    total_steps = max(1, int((int(session_minutes) * 60 + effective_interval_seconds - 1) / effective_interval_seconds))
+    expected_end_at = session_started_at + pd.Timedelta(seconds=total_steps * effective_interval_seconds)
+
+    write_capital_live_progress(
+        output_root=output_root,
+        status_payload={
+            "status": "starting",
+            "mode": "live_session_real_time",
+            "step": 0,
+            "total_steps": total_steps,
+            "current_timestamp": None,
+            "session_started_at": session_started_at,
+            "expected_end_at": expected_end_at,
+            "session_minutes": int(session_minutes),
+            "decision_interval_seconds": effective_interval_seconds,
+            "portfolio_id": portfolio_id,
+            "providers_used": list(providers),
+            "degraded_to_empty_news": False,
+            "sync_error": None,
+            "best_path": None,
+            "session_meta": {
+                "mode": "live_session_real_time",
+                "session_started_at": session_started_at,
+                "expected_end_at": expected_end_at,
+                "news_refresh_attempts": 0,
+                "news_refresh_successes": 0,
+                "news_refresh_errors": 0,
+                "news_refresh_skipped": 0,
+                "news_refresh_skipped_quota_cooldown": 0,
+                "stale_price_steps": 0,
+                "last_refresh_status": "not_requested",
+                "last_refresh_provider": None,
+                "last_refresh_events": 0,
+                "last_refresh_inserted": 0,
+                "last_refresh_articles_seen": 0,
+                "last_refresh_error": None,
+                "last_refresh_step": None,
+                "quota_cooldown_until_step": 0,
+            },
+        },
+        journal_frame=pd.DataFrame(columns=LIVE_JOURNAL_COLUMNS),
+        equity_frame=pd.DataFrame(columns=LIVE_EQUITY_COLUMNS),
+        snapshot_frame=pd.DataFrame(columns=LIVE_SNAPSHOT_COLUMNS),
+    )
+
+    return {
+        "run_id": run_id,
+        "output_root": output_root,
+        "session_started_at": session_started_at,
+        "expected_end_at": expected_end_at,
+        "portfolio_id": portfolio_id,
+        "total_steps": total_steps,
+    }
 
 
 def _prepare_capital_sandbox_inputs(
@@ -328,6 +402,7 @@ def _run_single_capital_session(
     news_refresh_minutes: int | None,
     fee_rate: float,
     slippage_rate: float,
+    session_started_at_override: Any | None = None,
 ) -> dict[str, Any]:
     mode = prepared["mode"]
     if mode in {"replay_intraday", "replay_as_of_timestamp"}:
@@ -404,6 +479,7 @@ def _run_single_capital_session(
             fee_rate=fee_rate,
             slippage_rate=slippage_rate,
             progress_callback=_progress_callback,
+            session_started_at_override=session_started_at_override,
         )
         effective_interval_seconds = max(60, int(decision_interval_seconds))
         effective_session_minutes = int(session_minutes)
@@ -479,6 +555,7 @@ def run_capital_sandbox_workbench(
     cache_dir: str | Path | None = None,
     output_dir: str | Path | None = None,
     run_id_override: str | None = None,
+    session_started_at_override: Any | None = None,
 ) -> dict[str, Any]:
     prepared = _prepare_capital_sandbox_inputs(
         portfolio_config=portfolio_config,
@@ -511,6 +588,7 @@ def run_capital_sandbox_workbench(
         news_refresh_minutes=news_refresh_minutes,
         fee_rate=fee_rate,
         slippage_rate=slippage_rate,
+        session_started_at_override=session_started_at_override,
     )
 
     report_markdown = build_capital_sandbox_report(

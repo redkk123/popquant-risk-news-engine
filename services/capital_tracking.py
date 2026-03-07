@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+from pandas.errors import EmptyDataError
 
 from services.pathing import PROJECT_ROOT
 
@@ -76,11 +77,26 @@ def build_capital_live_curve_frame(*, run_root: str | Path) -> tuple[pd.DataFram
     for csv_path in preferred_paths:
         if not csv_path.exists():
             continue
-        frame = pd.read_csv(csv_path)
+        frame = _safe_read_live_csv(csv_path)
+        if frame is None:
+            continue
         curve_frame, axis_label = _build_curve_frame_from_live_rows(frame)
         if curve_frame is not None and not curve_frame.empty:
             return curve_frame, axis_label
     return None, None
+
+
+def _safe_read_live_csv(csv_path: Path) -> pd.DataFrame | None:
+    try:
+        if not csv_path.exists() or csv_path.stat().st_size == 0:
+            return None
+    except OSError:
+        return None
+
+    try:
+        return pd.read_csv(csv_path)
+    except (EmptyDataError, FileNotFoundError, PermissionError, OSError):
+        return None
 
 
 def _build_curve_frame_from_live_rows(frame: pd.DataFrame) -> tuple[pd.DataFrame, str] | tuple[None, None]:

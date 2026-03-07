@@ -70,3 +70,14 @@ def test_build_capital_live_image_payload_returns_run_without_images_when_status
     assert payload["live_equity_curve_png"] is None
     assert payload["latest_minute_snapshot_png"] is None
     assert payload["minute_snapshot_images"] == []
+
+
+def test_build_capital_live_curve_frame_ignores_empty_live_csv(tmp_path) -> None:
+    run_root = tmp_path / "output" / "capital_sandbox" / "20260307T000001Z_demo"
+    run_root.mkdir(parents=True, exist_ok=True)
+    (run_root / "path_equity_curve.live.csv").write_text("", encoding="utf-8")
+
+    curve_frame, axis_label = build_capital_live_curve_frame(run_root=run_root)
+
+    assert curve_frame is None
+    assert axis_label is None

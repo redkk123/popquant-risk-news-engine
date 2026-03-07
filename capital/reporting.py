@@ -12,6 +12,42 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
 
+LIVE_JOURNAL_COLUMNS = [
+    "timestamp",
+    "capture_timestamp",
+    "session_step",
+    "path_name",
+    "portfolio_return",
+    "benchmark_return",
+    "capital_after_costs",
+    "target_exposure",
+    "action",
+    "decision_reason",
+    "regime",
+    "signal_score",
+    "quant_confirmation",
+    "confirmation_score",
+    "path_confirmation",
+    "path_confirmation_score",
+    "refresh_status",
+]
+
+LIVE_EQUITY_COLUMNS = [
+    "timestamp",
+    "capture_timestamp",
+    "session_step",
+    "path_name",
+    "capital",
+]
+
+LIVE_SNAPSHOT_COLUMNS = [
+    "snapshot_time",
+    "tracking_time",
+    "session_step",
+    "path_name",
+    "capital",
+]
+
 
 def build_capital_sandbox_report(
     *,
@@ -177,6 +213,11 @@ def write_capital_sandbox_outputs(
     report_path = root / "capital_sandbox_report.md"
     equity_png_path = root / "capital_sandbox_equity_curve.png"
     tracking_html_path = root / "capital_sandbox_tracking_log.html"
+    tracking_html_versioned_path = root / _build_versioned_tracking_filename(
+        root=root,
+        base_name="capital_sandbox_tracking_log",
+        suffix=".html",
+    )
 
     summary_frame.to_csv(summary_path, index=False)
     journal_frame.to_csv(journal_path, index=False)
@@ -196,6 +237,8 @@ def write_capital_sandbox_outputs(
         minute_snapshot_images=[],
         auto_refresh_seconds=None,
     )
+    if tracking_html_versioned_path != tracking_html_path:
+        tracking_html_versioned_path.write_text(tracking_html_path.read_text(encoding="utf-8"), encoding="utf-8")
 
     return {
         "summary_csv": summary_path,
@@ -205,6 +248,7 @@ def write_capital_sandbox_outputs(
         "report_md": report_path,
         "equity_curve_png": equity_png_path,
         "tracking_html": tracking_html_path,
+        "tracking_html_versioned": tracking_html_versioned_path,
     }
 
 
@@ -227,6 +271,11 @@ def write_capital_compare_outputs(
     equity_png_path = root / "capital_compare_equity_curve.png"
     summary_png_path = root / "capital_compare_final_capital.png"
     tracking_html_path = root / "capital_compare_tracking_log.html"
+    tracking_html_versioned_path = root / _build_versioned_tracking_filename(
+        root=root,
+        base_name="capital_compare_tracking_log",
+        suffix=".html",
+    )
 
     summary_frame.to_csv(summary_path, index=False)
     journal_frame.to_csv(journal_path, index=False)
@@ -252,6 +301,8 @@ def write_capital_compare_outputs(
         minute_snapshot_images=[summary_png_path],
         auto_refresh_seconds=None,
     )
+    if tracking_html_versioned_path != tracking_html_path:
+        tracking_html_versioned_path.write_text(tracking_html_path.read_text(encoding="utf-8"), encoding="utf-8")
 
     return {
         "summary_csv": summary_path,
@@ -262,6 +313,7 @@ def write_capital_compare_outputs(
         "equity_curve_png": equity_png_path,
         "final_capital_png": summary_png_path,
         "tracking_html": tracking_html_path,
+        "tracking_html_versioned": tracking_html_versioned_path,
     }
 
 
@@ -282,6 +334,15 @@ def write_capital_live_progress(
     live_equity_png_path = root / "capital_sandbox_equity_curve.live.png"
     minute_snapshot_image_dir = root / "minute_snapshot_images"
     tracking_html_path = root / "capital_sandbox_tracking_log.live.html"
+    tracking_html_versioned_path = root / _build_versioned_tracking_filename(
+        root=root,
+        base_name="capital_sandbox_tracking_log",
+        suffix=".live.html",
+    )
+
+    journal_frame = _ensure_live_frame_schema(journal_frame, LIVE_JOURNAL_COLUMNS)
+    equity_frame = _ensure_live_frame_schema(equity_frame, LIVE_EQUITY_COLUMNS)
+    snapshot_frame = _ensure_live_frame_schema(snapshot_frame, LIVE_SNAPSHOT_COLUMNS)
 
     with status_path.open("w", encoding="utf-8") as handle:
         json.dump(status_payload, handle, indent=2, default=str)
@@ -309,6 +370,8 @@ def write_capital_live_progress(
         minute_snapshot_images=minute_snapshot_images[:12],
         auto_refresh_seconds=5 if status_payload.get("status") in {"running", "completing"} else None,
     )
+    if tracking_html_versioned_path != tracking_html_path:
+        tracking_html_versioned_path.write_text(tracking_html_path.read_text(encoding="utf-8"), encoding="utf-8")
 
     return {
         "status_json": status_path,
@@ -319,7 +382,20 @@ def write_capital_live_progress(
         "latest_minute_snapshot_png": archived_snapshot_png,
         "minute_snapshot_image_dir": minute_snapshot_image_dir,
         "tracking_html": tracking_html_path,
+        "tracking_html_versioned": tracking_html_versioned_path,
     }
+
+
+def _ensure_live_frame_schema(frame: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+    if frame.empty and len(frame.columns) == 0:
+        return pd.DataFrame(columns=columns)
+    working = frame.copy()
+    for column in columns:
+        if column not in working.columns:
+            working[column] = pd.NA
+    ordered = [column for column in columns if column in working.columns]
+    remainder = [column for column in working.columns if column not in ordered]
+    return working.loc[:, ordered + remainder]
 
 
 def _write_equity_curve_png(
@@ -448,6 +524,11 @@ def _write_live_snapshot_archive_png(
 
 def _sanitize_snapshot_label(value: str) -> str:
     return re.sub(r"[^0-9A-Za-z_-]+", "_", value).strip("_")
+
+
+def _build_versioned_tracking_filename(*, root: Path, base_name: str, suffix: str) -> str:
+    session_label = _sanitize_snapshot_label(root.name)
+    return f"{base_name}.{session_label}{suffix}"
 
 
 def _write_capital_tracking_html(

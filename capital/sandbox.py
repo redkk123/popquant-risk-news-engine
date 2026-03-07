@@ -1002,10 +1002,18 @@ def run_capital_sandbox_live_session(
     slippage_rate: float = 0.0005,
     sleep_fn=time.sleep,
     progress_callback=None,
+    session_started_at_override: Any | None = None,
 ) -> dict[str, Any]:
     effective_interval_seconds = max(60, int(poll_interval_seconds))
     session_steps = max(1, int(math.ceil((int(session_minutes) * 60) / effective_interval_seconds)))
-    session_started_at = pd.Timestamp.now(tz="UTC")
+    if session_started_at_override is None:
+        session_started_at = pd.Timestamp.now(tz="UTC")
+    else:
+        session_started_at = pd.Timestamp(session_started_at_override)
+        if session_started_at.tzinfo is None:
+            session_started_at = session_started_at.tz_localize("UTC")
+        else:
+            session_started_at = session_started_at.tz_convert("UTC")
     expected_end_at = session_started_at + pd.Timedelta(seconds=session_steps * effective_interval_seconds)
 
     initial_prices = price_fetcher()

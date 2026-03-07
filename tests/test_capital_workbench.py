@@ -109,6 +109,44 @@ def test_run_capital_sandbox_compare_workbench_rejects_live_mode() -> None:
         raise AssertionError("Expected ValueError for live compare mode")
 
 
+def test_initialize_capital_live_run_writes_step_zero_status(tmp_path) -> None:
+    portfolio_path = tmp_path / "portfolio.json"
+    portfolio_path.write_text(
+        json.dumps(
+            {
+                "portfolio_id": "btc_test_book",
+                "description": "demo",
+                "base_currency": "USD",
+                "benchmark": "BTC-USD",
+                "positions": [{"ticker": "BTC-USD", "weight": 1.0}],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = capital_workbench_module.initialize_capital_live_run(
+        portfolio_config=portfolio_path,
+        session_minutes=5,
+        decision_interval_seconds=60,
+        output_dir=tmp_path / "capital_sandbox",
+        providers=["newsapi"],
+    )
+
+    status_path = result["output_root"] / "live_session_status.json"
+    equity_path = result["output_root"] / "path_equity_curve.live.csv"
+    snapshot_path = result["output_root"] / "capital_minute_snapshots.live.csv"
+
+    assert status_path.exists()
+    assert equity_path.exists()
+    assert snapshot_path.exists()
+
+    status_payload = json.loads(status_path.read_text(encoding="utf-8"))
+    assert status_payload["status"] == "starting"
+    assert status_payload["step"] == 0
+    assert status_payload["total_steps"] == 5
+    assert status_payload["portfolio_id"] == "btc_test_book"
+
+
 def test_prepare_capital_sandbox_inputs_prefers_newsapi_for_delayed_windows(monkeypatch, tmp_path) -> None:
     portfolio_path = tmp_path / "portfolio.json"
     portfolio_path.write_text(

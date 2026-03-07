@@ -4,6 +4,7 @@ import json
 import sys
 import threading
 from pathlib import Path
+from json import JSONDecodeError
 
 import pandas as pd
 import streamlit as st
@@ -18,11 +19,12 @@ from event_engine.live_validation import choose_validation_providers
 from services.capital_replay_batch import run_capital_replay_batch_workbench
 from services.capital_tracking import build_capital_live_curve_frame, build_capital_live_image_payload
 from services.capital_workbench import (
+    initialize_capital_live_run,
     run_capital_sandbox_compare_workbench,
     run_capital_sandbox_workbench,
 )
 from services.ops_workbench import build_overview_payload
-from services.portfolio_manager import list_portfolio_paths, load_portfolio_payload
+from services.portfolio_manager import list_portfolio_paths
 from services.provider_tokens import (
     PROVIDER_ENV_VARS,
     clear_provider_tokens,
@@ -60,13 +62,6 @@ def _find_portfolio_option(filename: str) -> str | None:
         if Path(option).name == filename:
             return option
     return None
-
-
-def _build_live_run_root(portfolio_path: str | Path) -> tuple[str, Path]:
-    payload = load_portfolio_payload(portfolio_path)
-    portfolio_id = str(payload["portfolio_id"])
-    run_id = f"{pd.Timestamp.now(tz='UTC').strftime('%Y%m%dT%H%M%S%fZ')}_{portfolio_id}"
-    return run_id, PROJECT_ROOT / "output" / "capital_sandbox" / run_id
 
 
 def _provider_token_status() -> pd.DataFrame:
@@ -405,8 +400,12 @@ def _render_live_snapshot_gallery(*, output_root: str | Path | None, title: str)
     status_path = Path(payload["run_root"]) / "live_session_status.json"
     status_payload: dict[str, object] | None = None
     if status_path.exists():
-        with status_path.open("r", encoding="utf-8") as handle:
-            status_payload = json.load(handle)
+        try:
+            with status_path.open("r", encoding="utf-8") as handle:
+                status_payload = json.load(handle)
+        except JSONDecodeError:
+            status_payload = None
+    if status_payload:
         session_meta = status_payload.get("session_meta", {}) or {}
         stale_steps = int(session_meta.get("stale_price_steps", 0) or 0)
         current_timestamp = status_payload.get("current_timestamp")
@@ -452,6 +451,19 @@ def _render_live_snapshot_gallery(*, output_root: str | Path | None, title: str)
         for index, image_path in enumerate(minute_images):
             with columns[index % len(columns)]:
                 st.image(str(image_path), caption=image_path.name, use_container_width=True)
+
+
+def _load_live_status_payload(output_root: str | Path | None) -> dict[str, object] | None:
+    if not output_root:
+        return None
+    status_path = Path(output_root) / "live_session_status.json"
+    if not status_path.exists():
+        return None
+    try:
+        with status_path.open("r", encoding="utf-8") as handle:
+            return json.load(handle)
+    except JSONDecodeError:
+        return None
 
 
 _render_top_state_cards()
@@ -620,8 +632,14 @@ run_tab, batch_tab = st.tabs(["Single Run", "Replay Batch"])
 with run_tab:
     if st.button("Run Capital Sandbox", disabled=not bool(portfolio_options), use_container_width=True):
         if mode == "live_session_real_time" and not compare_sessions:
-            run_id_override, run_root = _build_live_run_root(portfolio_path)
-            st.session_state["sandbox_current_run_root"] = str(run_root)
+            live_run = initialize_capital_live_run(
+                portfolio_config=portfolio_path,
+                session_minutes=int(session_minutes),
+                decision_interval_seconds=int(decision_interval_seconds),
+                output_dir=PROJECT_ROOT / "output" / "capital_sandbox",
+                providers=providers,
+            )
+            st.session_state["sandbox_current_run_root"] = str(live_run["output_root"])
             thread = threading.Thread(
                 target=_run_live_sandbox_in_background,
                 kwargs={
@@ -639,7 +657,8 @@ with run_tab:
                     "providers": providers,
                     "as_of_timestamp": as_of_timestamp if mode == "replay_as_of_timestamp" else None,
                     "output_dir": PROJECT_ROOT / "output" / "capital_sandbox",
-                    "run_id_override": run_id_override,
+                    "run_id_override": live_run["run_id"],
+                    "session_started_at_override": live_run["session_started_at"],
                 },
                 daemon=True,
             )
@@ -734,7 +753,13 @@ with refresh_col:
         key="sandbox_auto_refresh_enabled",
         help="Recarrega a pagina a cada 5s enquanto a ultima run live estiver running/completing.",
     )
-_render_live_snapshot_gallery(
-    output_root=st.session_state.get("sandbox_current_run_root"),
-    title="Latest Live Snapshot Tracking",
-)
+
+tracked_run_root = st.session_state.get("sandbox_current_run_root")
+tracked_status = _load_live_status_payload(tracked_run_root)
+if tracked_status and tracked_status.get("status") in {"starting", "running", "completing"}:
+    _render_live_snapshot_gallery(
+        output_root=tracked_run_root,
+        title="Latest Live Snapshot Tracking",
+    )
+else:
+    st.session_state.pop("sandbox_current_run_root", None)
