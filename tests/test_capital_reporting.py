@@ -87,3 +87,8 @@ def test_write_capital_live_progress_writes_live_and_archived_pngs(tmp_path) -> 
     assert len(archived_pngs) == 2
     assert archived_pngs[0].name.startswith("0002_")
     assert archived_pngs[1].name.startswith("0003_")
+    assert second_outputs["tracking_html"].exists()
+    html = second_outputs["tracking_html"].read_text(encoding="utf-8")
+    assert "Capital Sandbox Live Tracking Log" in html
+    assert "capital_sandbox_equity_curve.live.png" in html
+    assert "0003_" in html

@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import re
 from typing import Any
+from html import escape
 
 import json
 import matplotlib
@@ -175,6 +176,7 @@ def write_capital_sandbox_outputs(
     snapshot_path = root / "capital_minute_snapshots.csv"
     report_path = root / "capital_sandbox_report.md"
     equity_png_path = root / "capital_sandbox_equity_curve.png"
+    tracking_html_path = root / "capital_sandbox_tracking_log.html"
 
     summary_frame.to_csv(summary_path, index=False)
     journal_frame.to_csv(journal_path, index=False)
@@ -183,6 +185,17 @@ def write_capital_sandbox_outputs(
     with report_path.open("w", encoding="utf-8") as handle:
         handle.write(report_markdown)
     _write_equity_curve_png(snapshot_frame=snapshot_frame, output_path=equity_png_path, title="Capital Sandbox Equity Curve")
+    _write_capital_tracking_html(
+        output_path=tracking_html_path,
+        title="Capital Sandbox Tracking Log",
+        summary_frame=summary_frame,
+        journal_frame=journal_frame,
+        snapshot_frame=snapshot_frame,
+        status_payload=None,
+        live_equity_curve_png=equity_png_path,
+        minute_snapshot_images=[],
+        auto_refresh_seconds=None,
+    )
 
     return {
         "summary_csv": summary_path,
@@ -191,6 +204,7 @@ def write_capital_sandbox_outputs(
         "minute_snapshots_csv": snapshot_path,
         "report_md": report_path,
         "equity_curve_png": equity_png_path,
+        "tracking_html": tracking_html_path,
     }
 
 
@@ -212,6 +226,7 @@ def write_capital_compare_outputs(
     report_path = root / "capital_compare_report.md"
     equity_png_path = root / "capital_compare_equity_curve.png"
     summary_png_path = root / "capital_compare_final_capital.png"
+    tracking_html_path = root / "capital_compare_tracking_log.html"
 
     summary_frame.to_csv(summary_path, index=False)
     journal_frame.to_csv(journal_path, index=False)
@@ -226,6 +241,17 @@ def write_capital_compare_outputs(
         include_session=True,
     )
     _write_summary_bar_png(summary_frame=summary_frame, output_path=summary_png_path)
+    _write_capital_tracking_html(
+        output_path=tracking_html_path,
+        title="Capital Sandbox Compare Tracking Log",
+        summary_frame=summary_frame,
+        journal_frame=journal_frame,
+        snapshot_frame=snapshot_frame,
+        status_payload=None,
+        live_equity_curve_png=equity_png_path,
+        minute_snapshot_images=[summary_png_path],
+        auto_refresh_seconds=None,
+    )
 
     return {
         "summary_csv": summary_path,
@@ -235,6 +261,7 @@ def write_capital_compare_outputs(
         "report_md": report_path,
         "equity_curve_png": equity_png_path,
         "final_capital_png": summary_png_path,
+        "tracking_html": tracking_html_path,
     }
 
 
@@ -254,6 +281,7 @@ def write_capital_live_progress(
     snapshot_path = root / "capital_minute_snapshots.live.csv"
     live_equity_png_path = root / "capital_sandbox_equity_curve.live.png"
     minute_snapshot_image_dir = root / "minute_snapshot_images"
+    tracking_html_path = root / "capital_sandbox_tracking_log.live.html"
 
     with status_path.open("w", encoding="utf-8") as handle:
         json.dump(status_payload, handle, indent=2, default=str)
@@ -269,6 +297,18 @@ def write_capital_live_progress(
         snapshot_frame=snapshot_frame,
         output_dir=minute_snapshot_image_dir,
     )
+    minute_snapshot_images = sorted(minute_snapshot_image_dir.glob("*.png"), reverse=True) if minute_snapshot_image_dir.exists() else []
+    _write_capital_tracking_html(
+        output_path=tracking_html_path,
+        title="Capital Sandbox Live Tracking Log",
+        summary_frame=pd.DataFrame([status_payload.get("best_path", {})]) if status_payload.get("best_path") else pd.DataFrame(),
+        journal_frame=journal_frame,
+        snapshot_frame=snapshot_frame,
+        status_payload=status_payload,
+        live_equity_curve_png=live_equity_png_path if live_equity_png_path.exists() else None,
+        minute_snapshot_images=minute_snapshot_images[:12],
+        auto_refresh_seconds=5 if status_payload.get("status") in {"running", "completing"} else None,
+    )
 
     return {
         "status_json": status_path,
@@ -278,6 +318,7 @@ def write_capital_live_progress(
         "live_equity_curve_png": live_equity_png_path,
         "latest_minute_snapshot_png": archived_snapshot_png,
         "minute_snapshot_image_dir": minute_snapshot_image_dir,
+        "tracking_html": tracking_html_path,
     }
 
 
@@ -407,3 +448,108 @@ def _write_live_snapshot_archive_png(
 
 def _sanitize_snapshot_label(value: str) -> str:
     return re.sub(r"[^0-9A-Za-z_-]+", "_", value).strip("_")
+
+
+def _write_capital_tracking_html(
+    *,
+    output_path: str | Path,
+    title: str,
+    summary_frame: pd.DataFrame,
+    journal_frame: pd.DataFrame,
+    snapshot_frame: pd.DataFrame,
+    status_payload: dict[str, Any] | None,
+    live_equity_curve_png: str | Path | None,
+    minute_snapshot_images: list[Path],
+    auto_refresh_seconds: int | None,
+) -> None:
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+
+    refresh_tag = (
+        f'<meta http-equiv="refresh" content="{int(auto_refresh_seconds)}">'
+        if auto_refresh_seconds is not None
+        else ""
+    )
+    status_html = _render_dict_table(status_payload or {})
+    summary_html = _render_dataframe_html(summary_frame, max_rows=20)
+    journal_html = _render_dataframe_html(journal_frame.tail(20), max_rows=20)
+    snapshot_html = _render_dataframe_html(snapshot_frame.tail(30), max_rows=30)
+
+    curve_html = ""
+    if live_equity_curve_png is not None:
+        curve_path = Path(live_equity_curve_png)
+        if curve_path.exists():
+            curve_html = (
+                "<section><h2>Live Equity Curve</h2>"
+                f'<img src="{escape(curve_path.name)}" alt="Live equity curve" style="max-width:100%;border:1px solid #333;border-radius:8px;">'
+                "</section>"
+            )
+
+    images_html = ""
+    if minute_snapshot_images:
+        parts = ["<section><h2>Minute Snapshot Images</h2><div class='grid'>"]
+        for image_path in minute_snapshot_images:
+            rel = escape(str(image_path.relative_to(output.parent)).replace("\\", "/"))
+            parts.append(
+                "<figure>"
+                f'<img src="{rel}" alt="{escape(image_path.name)}" style="width:100%;border:1px solid #333;border-radius:8px;">'
+                f"<figcaption>{escape(image_path.name)}</figcaption>"
+                "</figure>"
+            )
+        parts.append("</div></section>")
+        images_html = "".join(parts)
+
+    html = f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {refresh_tag}
+  <title>{escape(title)}</title>
+  <style>
+    body {{ font-family: Segoe UI, Arial, sans-serif; background: #0b1020; color: #f3f4f6; margin: 0; padding: 24px; }}
+    h1, h2 {{ margin: 0 0 12px 0; }}
+    section {{ margin: 0 0 24px 0; padding: 16px; background: #121a2c; border: 1px solid #22304d; border-radius: 10px; }}
+    table {{ width: 100%; border-collapse: collapse; font-size: 14px; }}
+    th, td {{ border: 1px solid #2c3d60; padding: 6px 8px; text-align: left; vertical-align: top; }}
+    th {{ background: #17233b; }}
+    code {{ background: #111827; padding: 2px 6px; border-radius: 4px; }}
+    .grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }}
+    .muted {{ opacity: 0.75; }}
+  </style>
+</head>
+<body>
+  <h1>{escape(title)}</h1>
+  <p class="muted">Generated at {escape(pd.Timestamp.now(tz="UTC").isoformat())}</p>
+  <section><h2>Status</h2>{status_html}</section>
+  {curve_html}
+  {images_html}
+  <section><h2>Summary</h2>{summary_html}</section>
+  <section><h2>Recent Quant / Journal Rows</h2>{journal_html}</section>
+  <section><h2>Recent Snapshot Rows</h2>{snapshot_html}</section>
+</body>
+</html>
+"""
+    output.write_text(html, encoding="utf-8")
+
+
+def _render_dataframe_html(frame: pd.DataFrame, *, max_rows: int) -> str:
+    if frame is None or frame.empty:
+        return "<p>No rows.</p>"
+    limited = frame.head(max_rows).copy()
+    safe = limited.fillna("").astype(str)
+    return safe.to_html(index=False, escape=True, border=0)
+
+
+def _render_dict_table(payload: dict[str, Any]) -> str:
+    if not payload:
+        return "<p>No status payload.</p>"
+    rows = []
+    for key, value in payload.items():
+        rows.append(
+            "<tr>"
+            f"<th>{escape(str(key))}</th>"
+            f"<td><code>{escape(str(value))}</code></td>"
+            "</tr>"
+        )
+    return f"<table>{''.join(rows)}</table>"
