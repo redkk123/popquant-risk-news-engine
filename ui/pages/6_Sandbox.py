@@ -13,6 +13,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from event_engine.live_validation import choose_validation_providers
 from services.capital_replay_batch import run_capital_replay_batch_workbench
+from services.capital_tracking import build_capital_live_image_payload
 from services.capital_workbench import (
     run_capital_sandbox_compare_workbench,
     run_capital_sandbox_workbench,
@@ -196,6 +197,36 @@ def _render_result(result: dict[str, object], *, title: str) -> None:
         with st.expander("Markdown Report", expanded=False):
             st.markdown(result["report_markdown"])
 
+    _render_live_snapshot_gallery(
+        output_root=result.get("output_root"),
+        title=f"{title} Visual Tracking",
+    )
+
+
+def _render_live_snapshot_gallery(*, output_root: str | Path | None, title: str) -> None:
+    payload = build_capital_live_image_payload(
+        project_root=PROJECT_ROOT,
+        output_root=output_root,
+        image_limit=6,
+    )
+    if not payload.get("run_root"):
+        return
+
+    st.subheader(title)
+    st.caption(f"Run: `{payload['run_root']}`")
+
+    live_curve = payload.get("live_equity_curve_png")
+    if live_curve:
+        st.image(str(live_curve), caption="Live equity curve", use_container_width=True)
+
+    minute_images = payload.get("minute_snapshot_images") or []
+    if minute_images:
+        st.caption("Latest minute snapshots")
+        columns = st.columns(min(3, len(minute_images)))
+        for index, image_path in enumerate(minute_images):
+            with columns[index % len(columns)]:
+                st.image(str(image_path), caption=image_path.name, use_container_width=True)
+
 
 _render_top_state_cards()
 
@@ -313,6 +344,7 @@ with latest_col:
                 "overall_best_final_capital": latest_compare.get("overall_best_final_capital"),
             }
         )
+    _render_live_snapshot_gallery(output_root=None, title="Latest Live Snapshot Tracking")
 
 run_tab, batch_tab = st.tabs(["Single Run", "Replay Batch"])
 

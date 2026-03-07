@@ -1029,6 +1029,7 @@ Recent UI additions:
 - weight-sum preview on `Portfolios`
 - local provider-token config in `config/local/provider_tokens.json` (git-ignored)
 - replay batch lab on `Capital Sandbox`
+- live PNG tracking and minute-snapshot gallery on `Capital Sandbox`
 
 ## Docs Site
 
