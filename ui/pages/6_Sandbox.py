@@ -263,25 +263,6 @@ def _render_live_countdown(*, status_payload: dict[str, object]) -> None:
     )
 
 
-def _enable_auto_refresh_if_running(*, status_payload: dict[str, object] | None) -> None:
-    if not status_payload:
-        return
-    if not bool(st.session_state.get("sandbox_auto_refresh_enabled", False)):
-        return
-    if status_payload.get("status") not in {"running", "completing"}:
-        return
-    components.html(
-        """
-        <script>
-        setTimeout(function() {
-          window.parent.location.reload();
-        }, 5000);
-        </script>
-        """,
-        height=0,
-    )
-
-
 def _run_live_sandbox_in_background(**kwargs) -> None:
     with temporary_provider_token_env(kwargs.pop("token_inputs")):
         run_capital_sandbox_workbench(**kwargs)
@@ -433,7 +414,6 @@ def _render_live_snapshot_gallery(*, output_root: str | Path | None, title: str)
             )
         elif current_timestamp:
             st.caption(f"Last observed candle: `{current_timestamp}`")
-        _enable_auto_refresh_if_running(status_payload=status_payload)
 
     live_curve = payload.get("live_equity_curve_png")
     if live_curve:
@@ -443,6 +423,8 @@ def _render_live_snapshot_gallery(*, output_root: str | Path | None, title: str)
     if live_curve_frame is not None and not live_curve_frame.empty:
         st.caption(f"Accumulated capital by {axis_label}")
         st.line_chart(live_curve_frame, use_container_width=True)
+    elif status_payload and status_payload.get("status") in {"starting", "running", "completing"}:
+        st.info("Run iniciada. Aguardando o primeiro snapshot de capital/imagem.")
 
     minute_images = payload.get("minute_snapshot_images") or []
     if minute_images:
@@ -746,17 +728,16 @@ with batch_tab:
             st.markdown(batch_result["report_markdown"])
 
 st.divider()
-refresh_col, _ = st.columns([1.0, 3.0])
+refresh_col, info_col = st.columns([1.0, 3.0])
 with refresh_col:
-    st.checkbox(
-        "Auto-refresh latest live tracking",
-        key="sandbox_auto_refresh_enabled",
-        help="Recarrega a pagina a cada 5s enquanto a ultima run live estiver running/completing.",
-    )
+    if st.button("Refresh live tracking", use_container_width=True):
+        st.rerun()
+with info_col:
+    st.caption("Auto-refresh foi desativado para nao resetar a pagina. Use o botao para atualizar o tracking.")
 
 tracked_run_root = st.session_state.get("sandbox_current_run_root")
 tracked_status = _load_live_status_payload(tracked_run_root)
-if tracked_status and tracked_status.get("status") in {"starting", "running", "completing"}:
+if tracked_status:
     _render_live_snapshot_gallery(
         output_root=tracked_run_root,
         title="Latest Live Snapshot Tracking",
