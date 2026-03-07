@@ -4,6 +4,15 @@ import numpy as np
 import pandas as pd
 
 
+def _initial_ewma_variance(values: np.ndarray) -> float:
+    finite = values[np.isfinite(values)]
+    if finite.size == 0:
+        raise ValueError("Returns contain no finite observations.")
+    if finite.size == 1:
+        return float(finite[0] ** 2)
+    return float(np.nanvar(finite, ddof=1))
+
+
 def ewma_volatility(returns: pd.Series, lam: float = 0.94) -> pd.Series:
     """Estimate one-step-ahead EWMA volatility from return series."""
     if not 0.0 < lam < 1.0:
@@ -13,7 +22,7 @@ def ewma_volatility(returns: pd.Series, lam: float = 0.94) -> pd.Series:
 
     r = returns.astype(float).to_numpy()
     variances = np.empty_like(r)
-    variances[0] = np.nanvar(r, ddof=1)
+    variances[0] = _initial_ewma_variance(r)
 
     for i in range(1, len(r)):
         variances[i] = lam * variances[i - 1] + (1.0 - lam) * (r[i - 1] ** 2)
@@ -32,4 +41,3 @@ def ewma_next_volatility(returns: pd.Series, lam: float = 0.94) -> float:
     last_return = float(returns.iloc[-1])
     next_variance = lam * (last_sigma**2) + (1.0 - lam) * (last_return**2)
     return float(np.sqrt(max(next_variance, 0.0)))
-
