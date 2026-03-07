@@ -1045,6 +1045,8 @@ def run_capital_sandbox_live_session(
         "last_refresh_step": None,
         "quota_cooldown_until_step": 0,
         "mode": "live_session_real_time",
+        "session_started_at": session_started_at,
+        "expected_end_at": expected_end_at,
     }
 
     asset_initial = initial_prices.loc[:, weights.index.tolist()]

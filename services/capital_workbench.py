@@ -369,6 +369,8 @@ def _run_single_capital_session(
                     "step": int(progress["step"]),
                     "total_steps": int(progress["total_steps"]),
                     "current_timestamp": progress["current_timestamp"],
+                    "session_started_at": progress.get("session_started_at"),
+                    "expected_end_at": progress.get("expected_end_at"),
                     "session_minutes": int(session_minutes),
                     "decision_interval_seconds": max(60, int(decision_interval_seconds)),
                     "portfolio_id": prepared["metadata"]["portfolio_id"],
@@ -557,6 +559,8 @@ def run_capital_sandbox_workbench(
                     if not session_result["journal_frame"].empty
                     else None
                 ),
+                "session_started_at": session_result["session_meta"].get("session_started_at"),
+                "expected_end_at": session_result["session_meta"].get("expected_end_at"),
                 "session_minutes": int(session_minutes),
                 "decision_interval_seconds": int(session_result["effective_interval_seconds"]),
                 "portfolio_id": prepared["metadata"]["portfolio_id"],

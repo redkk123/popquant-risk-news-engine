@@ -43,6 +43,8 @@ portfolio_options = [str(path) for path in list_portfolio_paths(PROJECT_ROOT)]
 if not portfolio_options:
     st.warning("No portfolio JSON files found under config/portfolios.")
     st.stop()
+if "sandbox_auto_refresh_enabled" not in st.session_state:
+    st.session_state["sandbox_auto_refresh_enabled"] = False
 
 
 def _format_portfolio_option(path_str: str) -> str:
@@ -242,7 +244,7 @@ def _render_live_countdown(*, status_payload: dict[str, object]) -> None:
           let remaining = 0;
           if (payload.expected_end_at) {{
             const expectedEnd = new Date(payload.expected_end_at).getTime();
-            remaining = Math.max(0, Math.floor((expectedEnd - Date.now()) / 1000));
+            remaining = Math.max(0, Math.ceil((expectedEnd - Date.now()) / 1000));
           }} else {{
             const elapsed = Math.floor((Date.now() - mountedAt) / 1000);
             remaining = Math.max(0, (payload.initial_remaining_seconds || 0) - elapsed);
@@ -261,6 +263,8 @@ def _render_live_countdown(*, status_payload: dict[str, object]) -> None:
 
 def _enable_auto_refresh_if_running(*, status_payload: dict[str, object] | None) -> None:
     if not status_payload:
+        return
+    if not bool(st.session_state.get("sandbox_auto_refresh_enabled", False)):
         return
     if status_payload.get("status") not in {"running", "completing"}:
         return
@@ -609,6 +613,7 @@ run_tab, batch_tab = st.tabs(["Single Run", "Replay Batch"])
 with run_tab:
     if st.button("Run Capital Sandbox", disabled=not bool(portfolio_options), use_container_width=True):
         if mode == "live_session_real_time" and not compare_sessions:
+            st.session_state["sandbox_auto_refresh_enabled"] = True
             thread = threading.Thread(
                 target=_run_live_sandbox_in_background,
                 kwargs={
@@ -630,7 +635,7 @@ with run_tab:
                 daemon=True,
             )
             thread.start()
-            st.success("Live sandbox started in background. The page will auto-refresh while the session is running.")
+            st.success("Live sandbox started in background. Auto-refresh foi ligado para acompanhar a sessao.")
             st.rerun()
         else:
             with temporary_provider_token_env(token_inputs):
@@ -713,4 +718,11 @@ with batch_tab:
             st.markdown(batch_result["report_markdown"])
 
 st.divider()
+refresh_col, _ = st.columns([1.0, 3.0])
+with refresh_col:
+    st.checkbox(
+        "Auto-refresh latest live tracking",
+        key="sandbox_auto_refresh_enabled",
+        help="Recarrega a pagina a cada 5s enquanto a ultima run live estiver running/completing.",
+    )
 _render_live_snapshot_gallery(output_root=None, title="Latest Live Snapshot Tracking")
