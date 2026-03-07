@@ -952,3 +952,7 @@ Current takeaway:
 - on the latest fresh live-validation window driven by `Alpha Vantage`, the guarded candidate improved `14/15` portfolios in a direct selected-vs-guarded probe compare
 - reprocessing that same fresh Alpha-driven batch with the latest taxonomy rules drives the batch `other` count from `9` to `0` without touching the watchlist-active set
 - that fresh window still does not justify promotion by itself because the grouped aggregate research baseline remains stronger and the trend gate is still sensitive to recent quota failures
+
+## License
+
+MIT. See `LICENSE`.
