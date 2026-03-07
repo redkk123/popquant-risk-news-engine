@@ -1154,8 +1154,7 @@ def run_capital_sandbox_live_session(
         )
 
     for step in range(1, session_steps + 1):
-        if step > 1:
-            sleep_fn(effective_interval_seconds)
+        sleep_fn(effective_interval_seconds)
 
         current_prices = price_fetcher()
         current_prices = current_prices.sort_index().ffill().dropna(how="all")

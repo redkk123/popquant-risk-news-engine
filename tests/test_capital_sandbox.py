@@ -170,7 +170,7 @@ def test_run_capital_sandbox_live_session_uses_minute_steps_without_sleeping() -
     summary = result["summary_frame"]
     journal = result["journal_frame"]
     assert len(journal) == 3
-    assert sleep_calls == [60, 60]
+    assert sleep_calls == [60, 60, 60]
     assert set(summary["path_name"]) == {
         "cash_only",
         "benchmark_hold",
