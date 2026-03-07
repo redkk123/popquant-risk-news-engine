@@ -41,13 +41,14 @@ def build_capital_live_image_payload(
             "minute_snapshot_images": [],
         }
 
+    status_json = run_root / "live_session_status.json"
     live_equity_curve_png = run_root / "capital_sandbox_equity_curve.live.png"
     image_dir = run_root / "minute_snapshot_images"
     images = sorted(image_dir.glob("*.png"), reverse=True) if image_dir.exists() else []
     images = images[: max(0, int(image_limit))]
     live_curve = live_equity_curve_png if live_equity_curve_png.exists() else None
 
-    if live_curve is None and not images:
+    if not status_json.exists() and live_curve is None and not images:
         return {
             "run_root": None,
             "live_equity_curve_png": None,

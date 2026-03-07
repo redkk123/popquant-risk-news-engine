@@ -57,3 +57,16 @@ def test_build_capital_live_curve_frame_reconstructs_old_live_runs(tmp_path) -> 
     assert float(curve_frame.loc[1, "cash_only"]) == 100.0
     assert float(curve_frame.loc[2, "cash_only"]) == 99.9
     assert float(curve_frame.loc[2, "benchmark_hold"]) == 100.1
+
+
+def test_build_capital_live_image_payload_returns_run_without_images_when_status_exists(tmp_path) -> None:
+    run_root = tmp_path / "output" / "capital_sandbox" / "20260307T000000Z_demo"
+    run_root.mkdir(parents=True, exist_ok=True)
+    (run_root / "live_session_status.json").write_text("{}", encoding="utf-8")
+
+    payload = build_capital_live_image_payload(project_root=tmp_path)
+
+    assert payload["run_root"] == run_root
+    assert payload["live_equity_curve_png"] is None
+    assert payload["latest_minute_snapshot_png"] is None
+    assert payload["minute_snapshot_images"] == []
