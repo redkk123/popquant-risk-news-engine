@@ -613,7 +613,6 @@ run_tab, batch_tab = st.tabs(["Single Run", "Replay Batch"])
 with run_tab:
     if st.button("Run Capital Sandbox", disabled=not bool(portfolio_options), use_container_width=True):
         if mode == "live_session_real_time" and not compare_sessions:
-            st.session_state["sandbox_auto_refresh_enabled"] = True
             thread = threading.Thread(
                 target=_run_live_sandbox_in_background,
                 kwargs={
@@ -635,7 +634,7 @@ with run_tab:
                 daemon=True,
             )
             thread.start()
-            st.success("Live sandbox started in background. Auto-refresh foi ligado para acompanhar a sessao.")
+            st.success("Live sandbox started in background. Auto-refresh permanece manual.")
             st.rerun()
         else:
             with temporary_provider_token_env(token_inputs):
