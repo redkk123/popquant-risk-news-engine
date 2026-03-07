@@ -2,6 +2,12 @@
 
 This folder contains lightweight, publish-friendly outputs copied from larger run folders.
 
+If you want the shortest repo narrative first, read:
+
+1. `../docs/showcase_walkthrough.md`
+2. `capital_replay_batch_report.md`
+3. `probe_compare_report.md`
+
 Included:
 
 - `week1_baseline.png`: baseline quant-risk chart

@@ -1,4 +1,111 @@
-# PopQuant Risk + News Engine MVP
+# PopQuant Risk + News Engine
+
+Deterministic portfolio risk engine plus event-driven news analysis.
+
+This repo tries to answer a concrete question:
+
+> Does a news-conditioned risk layer improve plain portfolio risk estimates, or does it mostly add noise?
+
+The answer in the current state is honest:
+
+- the engineering stack is strong and end-to-end functional
+- the event-conditioned layer helps in specific families and probe batches
+- the guarded integrated map still does **not** beat the pure baseline end-to-end in grouped aggregate backtests
+
+That is not a code failure. It is the research result so far.
+
+## What This Repo Actually Does
+
+At a high level, the system has four layers:
+
+1. `quant risk`
+   - returns, volatility, VaR, ES, stress, Monte Carlo, backtests
+2. `news engine`
+   - ingest news, normalize, dedupe, link tickers, classify event types
+3. `fusion`
+   - map events into scenarios and recompute risk under event stress
+4. `capital sandbox`
+   - simulate simple pathing decisions with paper capital under risk/news rules
+
+This is not a toy notebook. It is a modular research-and-operations workbench.
+
+## Current Result
+
+The strongest current statements are:
+
+- `risk_v2`, grouped backtests, calibration registry, operator summary, ops analytics, UI, and sandbox are implemented
+- `NewsAPI.org`, `The News API`, `Marketaux`, and `Alpha Vantage` are wired into the provider chain
+- fresh and delayed validation flows are separated
+- `replay_as_of_timestamp` allows time-shifted validation without looking past the cutoff
+- the guarded map improved archived/fresh probe compares, but still has a promotion gap versus the pure baseline in grouped aggregate research
+
+If you only want the shortest proof path, read these:
+
+1. `docs/showcase_walkthrough.md`
+2. `PROJECT_FINAL_STATUS.md`
+3. `showcase/probe_compare_report.md`
+4. `showcase/capital_replay_asof_1904.md`
+5. `showcase/capital_replay_batch_report.md`
+
+## Quickstart
+
+Setup:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+Three fast runs that show the repo's core layers:
+
+1. plain risk snapshot
+
+```bash
+python scripts/run_risk_snapshot.py --portfolio-config config/portfolios/demo_portfolio.json --start 2022-01-01 --alpha 0.01
+```
+
+2. grouped event-conditioned research backtest
+
+```bash
+python scripts/run_integration_backtest.py --watchlist-config config/watchlists/demo_watchlist.yaml --mapping-variants configured calibrated source_aware --group-by event_type event_subtype source_tier
+```
+
+3. rigorous delayed replay using yesterday's clock time
+
+```bash
+python scripts/run_capital_sandbox.py --mode replay_as_of_timestamp --portfolio-config config/portfolios/demo_portfolio.json --as-of-timestamp 2026-03-05T19:04:00-03:00 --session-minutes 5 --decision-interval-seconds 60 --providers newsapi
+```
+
+## Why This Repo Is Interesting
+
+Most portfolio projects stop at static analytics or historical backtests.
+
+This repo goes further:
+
+- deterministic multi-provider news ingestion
+- event-conditioned stress mapping
+- grouped research backtests by event family and source tier
+- governance and promotion gates
+- real-time and time-shifted capital sandbox runs
+
+It also keeps the uncomfortable part visible:
+
+- the integrated layer is not promoted just because it is more complex
+- if it does not beat the baseline, the docs say so
+
+## Current Open Problem
+
+The main unresolved problem is not architecture.
+
+It is evidence:
+
+1. more fresh supported live windows
+2. more coverage for promotion metrics
+3. stronger proof that the guarded map beats or at least justifies itself against the baseline
+4. more sandbox sessions with truly actionable live signal
+
+## Full Capability List
 
 This project contains a portfolio risk engine plus a deterministic NLP news engine:
 
