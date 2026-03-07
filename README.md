@@ -1037,6 +1037,12 @@ pip install -r requirements-docs.txt
 mkdocs serve
 ```
 
+Windows shortcut:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/run_docs_site.ps1
+```
+
 Local build:
 
 ```bash
