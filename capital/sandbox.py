@@ -1005,6 +1005,8 @@ def run_capital_sandbox_live_session(
 ) -> dict[str, Any]:
     effective_interval_seconds = max(60, int(poll_interval_seconds))
     session_steps = max(1, int(math.ceil((int(session_minutes) * 60) / effective_interval_seconds)))
+    session_started_at = pd.Timestamp.now(tz="UTC")
+    expected_end_at = session_started_at + pd.Timedelta(seconds=session_steps * effective_interval_seconds)
 
     initial_prices = price_fetcher()
     initial_prices = initial_prices.sort_index().ffill().dropna(how="all")
@@ -1145,6 +1147,8 @@ def run_capital_sandbox_live_session(
                 "equity_frame": pd.DataFrame(equity_rows),
                 "summary_frame": pd.DataFrame(),
                 "current_timestamp": previous_timestamp,
+                "session_started_at": session_started_at,
+                "expected_end_at": expected_end_at,
                 "session_meta": dict(session_meta),
             }
         )
@@ -1433,6 +1437,8 @@ def run_capital_sandbox_live_session(
                     "equity_frame": partial_equity,
                     "summary_frame": partial_summary,
                     "current_timestamp": current_timestamp,
+                    "session_started_at": session_started_at,
+                    "expected_end_at": expected_end_at,
                     "session_meta": dict(session_meta),
                 }
             )

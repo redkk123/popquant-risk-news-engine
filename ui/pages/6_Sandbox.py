@@ -199,11 +199,24 @@ def _render_live_countdown(*, status_payload: dict[str, object]) -> None:
     step = int(status_payload.get("step", 0) or 0)
     total_steps = int(status_payload.get("total_steps", 0) or 0)
     interval_seconds = int(status_payload.get("decision_interval_seconds", 60) or 60)
-    remaining_seconds = max(0, (total_steps - step) * interval_seconds)
     total_seconds = max(0, total_steps * interval_seconds)
     progress_value = 0.0 if total_steps <= 0 else min(max(step / total_steps, 0.0), 1.0)
+    expected_end_at = status_payload.get("expected_end_at")
+    session_started_at = status_payload.get("session_started_at")
 
     st.progress(progress_value, text=f"Live progress: step {step}/{total_steps}")
+    if expected_end_at and session_started_at:
+        countdown_payload = {
+            "expected_end_at": str(expected_end_at),
+            "session_started_at": str(session_started_at),
+            "total_seconds": total_seconds,
+        }
+    else:
+        remaining_seconds = max(0, (total_steps - step) * interval_seconds)
+        countdown_payload = {
+            "initial_remaining_seconds": remaining_seconds,
+            "total_seconds": total_seconds,
+        }
     components.html(
         f"""
         <div style="padding:0.8rem 1rem;border:1px solid #2b2b37;border-radius:0.6rem;background:#0f1116;color:#fafafa;">
@@ -212,9 +225,9 @@ def _render_live_countdown(*, status_payload: dict[str, object]) -> None:
           <div id="sandbox-countdown-total" style="opacity:0.75;font-size:0.85rem;"></div>
         </div>
         <script>
+        const payload = {json.dumps(countdown_payload)};
         const mountedAt = Date.now();
-        const initialRemaining = {remaining_seconds};
-        const totalSeconds = {total_seconds};
+        const totalSeconds = payload.total_seconds || 0;
         const remainingEl = document.getElementById("sandbox-countdown-remaining");
         const totalEl = document.getElementById("sandbox-countdown-total");
 
@@ -226,8 +239,14 @@ def _render_live_countdown(*, status_payload: dict[str, object]) -> None:
         }}
 
         function tick() {{
-          const elapsed = Math.floor((Date.now() - mountedAt) / 1000);
-          const remaining = Math.max(0, initialRemaining - elapsed);
+          let remaining = 0;
+          if (payload.expected_end_at) {{
+            const expectedEnd = new Date(payload.expected_end_at).getTime();
+            remaining = Math.max(0, Math.floor((expectedEnd - Date.now()) / 1000));
+          }} else {{
+            const elapsed = Math.floor((Date.now() - mountedAt) / 1000);
+            remaining = Math.max(0, (payload.initial_remaining_seconds || 0) - elapsed);
+          }}
           remainingEl.textContent = "remaining: " + formatSeconds(remaining);
           totalEl.textContent = "total session: " + formatSeconds(totalSeconds);
         }}

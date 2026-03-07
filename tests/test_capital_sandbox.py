@@ -280,6 +280,65 @@ def test_run_capital_sandbox_live_session_refreshes_events_and_records_quant_fie
     assert set(journal["refresh_status"]) == {"success"}
 
 
+def test_run_capital_sandbox_live_session_emits_absolute_countdown_timestamps() -> None:
+    frames = [
+        pd.DataFrame(
+            {
+                "BTC-USD": [90000.0, 90020.0],
+            },
+            index=pd.to_datetime(["2026-03-06T13:00:00Z", "2026-03-06T13:01:00Z"]),
+        ),
+        pd.DataFrame(
+            {
+                "BTC-USD": [90000.0, 90020.0, 90010.0],
+            },
+            index=pd.to_datetime(["2026-03-06T13:00:00Z", "2026-03-06T13:01:00Z", "2026-03-06T13:02:00Z"]),
+        ),
+    ]
+    fetch_count = {"value": 0}
+    progress_events: list[dict[str, object]] = []
+
+    def _fetcher():
+        index = min(fetch_count["value"], len(frames) - 1)
+        fetch_count["value"] += 1
+        return frames[index]
+
+    def _progress(payload: dict[str, object]) -> None:
+        progress_events.append(payload)
+
+    run_capital_sandbox_live_session(
+        price_fetcher=_fetcher,
+        weights=pd.Series({"BTC-USD": 1.0}),
+        benchmark_name="BTC-USD",
+        events=[],
+        mapping_config={
+            "settings": {"source_scaling": {"tiers": {}, "buckets": {}}},
+            "event_mappings": {
+                "other": {
+                    "neutral": {
+                        "return_shock": 0.0,
+                        "vol_multiplier": 1.0,
+                        "correlation_multiplier": 1.0,
+                    }
+                }
+            },
+        },
+        ticker_sector_map={"BTC-USD": "Crypto"},
+        initial_capital=100.0,
+        poll_interval_seconds=60,
+        session_minutes=2,
+        sleep_fn=lambda _seconds: None,
+        progress_callback=_progress,
+    )
+
+    assert progress_events
+    first = progress_events[0]
+    last = progress_events[-1]
+    assert "session_started_at" in first
+    assert "expected_end_at" in first
+    assert pd.Timestamp(last["expected_end_at"]) >= pd.Timestamp(last["session_started_at"])
+
+
 def test_run_capital_sandbox_live_session_skips_refresh_after_quota_error() -> None:
     frames = [
         pd.DataFrame(
