@@ -1025,6 +1025,8 @@ Recent UI additions:
 - latest capital compare block on `Overview` and `Capital Sandbox`
 - path leaderboard and capital-run tables on `Ops`
 - weight-sum preview on `Portfolios`
+- local provider-token config in `config/local/provider_tokens.json` (git-ignored)
+- replay batch lab on `Capital Sandbox`
 
 ## Docs Site
 
