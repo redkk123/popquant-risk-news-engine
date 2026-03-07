@@ -7,6 +7,7 @@ from typing import Any
 import json
 import matplotlib
 matplotlib.use("Agg")
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -312,12 +313,27 @@ def _write_equity_curve_png(
         return
 
     plt.figure(figsize=(12, 6))
+    single_snapshot = len(pivot.index) == 1
     for column in pivot.columns:
-        plt.plot(pivot.index, pivot[column], label=str(column), linewidth=2)
+        series = pivot[column].dropna()
+        if series.empty:
+            continue
+        plt.plot(
+            series.index,
+            series.values,
+            label=str(column),
+            linewidth=2,
+            marker="o" if len(series.index) <= 2 else None,
+            markersize=7 if len(series.index) <= 2 else None,
+        )
     plt.title(title)
     plt.xlabel("Time")
     plt.ylabel("Capital")
     plt.grid(True, alpha=0.3)
+    if single_snapshot:
+        anchor = pivot.index[0]
+        plt.xlim(anchor - pd.Timedelta(minutes=1), anchor + pd.Timedelta(minutes=1))
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d %H:%M"))
     plt.legend(loc="best", fontsize=8)
     plt.tight_layout()
     plt.savefig(output, dpi=140)
