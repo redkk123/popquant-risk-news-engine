@@ -1,0 +1,12 @@
+{
+  "portfolio_id": "btc_test_book",
+  "description": "BTC-USD single-asset portfolio for 24/7 sandbox feed testing.",
+  "base_currency": "USD",
+  "benchmark": "BTC-USD",
+  "positions": [
+    {
+      "ticker": "BTC-USD",
+      "weight": 1.0
+    }
+  ]
+}

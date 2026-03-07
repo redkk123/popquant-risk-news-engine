@@ -45,6 +45,21 @@ if not portfolio_options:
     st.stop()
 
 
+def _format_portfolio_option(path_str: str) -> str:
+    path = Path(path_str)
+    label = path.stem
+    if path.stem == "btc_test_portfolio":
+        return f"{label} (BTC 24/7 test)"
+    return label
+
+
+def _find_portfolio_option(filename: str) -> str | None:
+    for option in portfolio_options:
+        if Path(option).name == filename:
+            return option
+    return None
+
+
 def _provider_token_status() -> pd.DataFrame:
     rows = []
     for provider in ["marketaux", "thenewsapi", "newsapi", "alphavantage"]:
@@ -417,7 +432,26 @@ with config_col:
     token_inputs = _render_token_manager()
 
     st.subheader("Run Configuration")
-    portfolio_path = st.selectbox("Portfolio", options=portfolio_options, index=0)
+    portfolio_default = _find_portfolio_option("btc_test_portfolio.json")
+    preset_portfolio_cols = st.columns(2)
+    if preset_portfolio_cols[0].button("Use default portfolio", use_container_width=True):
+        st.session_state["sandbox_portfolio_path"] = portfolio_options[0]
+    if preset_portfolio_cols[1].button("Use BTC 24/7 test", use_container_width=True, disabled=portfolio_default is None):
+        if portfolio_default is not None:
+            st.session_state["sandbox_portfolio_path"] = portfolio_default
+
+    if "sandbox_portfolio_path" not in st.session_state or st.session_state["sandbox_portfolio_path"] not in portfolio_options:
+        st.session_state["sandbox_portfolio_path"] = portfolio_options[0]
+
+    portfolio_path = st.selectbox(
+        "Portfolio",
+        options=portfolio_options,
+        index=portfolio_options.index(st.session_state["sandbox_portfolio_path"]),
+        format_func=_format_portfolio_option,
+        key="sandbox_portfolio_path",
+    )
+    if Path(portfolio_path).name == "btc_test_portfolio.json":
+        st.caption("BTC test ativo: feed de preco 24/7. Cobertura de noticias pode ser mais fraca do que em equities.")
     mode = st.selectbox(
         "Mode",
         options=["live_session_real_time", "replay_intraday", "replay_as_of_timestamp", "historical_daily"],
